@@ -3,38 +3,28 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package listscheduling;
+package gui;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 /**
  *
  * @author Stefan
  */
-public class ListScheduling extends Application {
+public class Main extends Application {
+    
+    private static final int WINDOW_HEIGHT = 800;
+    private static final int WINDOW_WEIGHT = 600;
     
     @Override
     public void start(Stage primaryStage) {
-        Button btn = new Button();
-        btn.setText("Say 'Hello World'");
-        btn.setOnAction(new EventHandler<ActionEvent>() {
-            
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Hello World!");
-            }
-        });
         
-        StackPane root = new StackPane();
-        root.getChildren().add(btn);
+        Group root = new Group();
         
-        Scene scene = new Scene(root, 300, 250);
+        Scene scene = new Scene(root, WINDOW_WEIGHT, WINDOW_HEIGHT);
         
         primaryStage.setTitle("Hello World!");
         primaryStage.setScene(scene);
@@ -46,6 +36,7 @@ public class ListScheduling extends Application {
      */
     public static void main(String[] args) {
         launch(args);
+        
     }
     
 }
