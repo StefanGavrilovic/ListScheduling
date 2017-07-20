@@ -12,14 +12,14 @@ import java.util.List;
  *
  * @author Stefan
  */
-class Node {
+public class NodeGraph {
 
     private String name;
     private int duration;
     private Instruction instruction;
-    private List<Node> links;
+    private final List<NodeGraph> links;
     
-    Node(String name, String duration, String instruction) {
+    NodeGraph(String name, String duration, String instruction) {
         this.name = name;
         this.duration = Integer.parseInt(duration);
         this.instruction = new Instruction(instruction);
@@ -48,6 +48,18 @@ class Node {
 
     public void setInstruction(String instruction) {
         this.instruction = new Instruction(instruction);
+    }
+    
+    public void addLink(NodeGraph node){
+        links.add(node);
+    }
+    
+    public NodeGraph getFirstLink(){
+        return links.get(0);
+    }
+    
+    public void removeLink(NodeGraph node){
+        links.remove(node);
     }
     
 }

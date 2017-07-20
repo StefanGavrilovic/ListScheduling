@@ -18,7 +18,7 @@ class Instruction {
     Instruction(String instruction) {
         String [] tmp1 = instruction.split("=");
         result = tmp1[0];
-        String [] tmp2 = tmp1[1].split("[a-zA-Z]+.[a-zA-Z]+");
+        String [] tmp2 = tmp1[1].split("[+|/|*|-]");
         A = tmp2[0];
         B = tmp2[1];
     }

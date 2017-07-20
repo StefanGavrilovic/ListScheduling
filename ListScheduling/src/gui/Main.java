@@ -5,6 +5,7 @@
  */
 package gui;
 
+import graph.Graph;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -17,14 +18,17 @@ import javafx.stage.Stage;
 public class Main extends Application {
     
     private static final int WINDOW_HEIGHT = 800;
-    private static final int WINDOW_WEIGHT = 600;
+    private static final int WINDOW_WIDTH = 1024;
     
     @Override
     public void start(Stage primaryStage) {
         
         Group root = new Group();
         
-        Scene scene = new Scene(root, WINDOW_WEIGHT, WINDOW_HEIGHT);
+        Graph2D graph = new Graph2D(new Graph("test.txt"));
+        root.getChildren().add(graph);
+        
+        Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
         
         primaryStage.setTitle("Hello World!");
         primaryStage.setScene(scene);
@@ -36,7 +40,6 @@ public class Main extends Application {
      */
     public static void main(String[] args) {
         launch(args);
-        
     }
     
 }

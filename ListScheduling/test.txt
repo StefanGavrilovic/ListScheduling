@@ -1,0 +1,5 @@
+OP1 1 C=A+B
+OP2 1 A=D+E
+OP3 4 B=F+G
+OP4 2 D=B*A
+OP5 1 F=H-J
