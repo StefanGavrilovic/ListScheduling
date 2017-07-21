@@ -7,6 +7,7 @@ package graph;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  *
@@ -18,7 +19,7 @@ public class NodeGraph {
     private int duration;
     private Instruction instruction;
     private final List<NodeGraph> links;
-    
+
     NodeGraph(String name, String duration, String instruction) {
         this.name = name;
         this.duration = Integer.parseInt(duration);
@@ -49,17 +50,20 @@ public class NodeGraph {
     public void setInstruction(String instruction) {
         this.instruction = new Instruction(instruction);
     }
-    
-    public void addLink(NodeGraph node){
+
+    public void addLink(NodeGraph node) {
         links.add(node);
     }
-    
-    public NodeGraph getFirstLink(){
+
+    public NodeGraph getFirstLink() {
         return links.get(0);
     }
-    
-    public void removeLink(NodeGraph node){
+
+    public void removeLink(NodeGraph node) {
         links.remove(node);
     }
-    
+
+    public ListIterator<NodeGraph> getLinksIterator() {
+        return links.listIterator();
+    }
 }

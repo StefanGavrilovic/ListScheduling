@@ -16,20 +16,22 @@ import javafx.stage.Stage;
  * @author Stefan
  */
 public class Main extends Application {
-    
+
     private static final int WINDOW_HEIGHT = 800;
     private static final int WINDOW_WIDTH = 1024;
-    
+
     @Override
     public void start(Stage primaryStage) {
-        
+
         Group root = new Group();
-        
+
         Graph2D graph = new Graph2D(new Graph("test.txt"));
+        graph.setTranslateX(WINDOW_WIDTH / 2);
+        graph.setTranslateY(WINDOW_HEIGHT / 20);
         root.getChildren().add(graph);
-        
+
         Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
-        
+
         primaryStage.setTitle("Hello World!");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -41,5 +43,5 @@ public class Main extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-    
+
 }

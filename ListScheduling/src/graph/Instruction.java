@@ -14,11 +14,11 @@ class Instruction {
     private String result;
     private String A;
     private String B;
-    
+
     Instruction(String instruction) {
-        String [] tmp1 = instruction.split("=");
+        String[] tmp1 = instruction.split("=");
         result = tmp1[0];
-        String [] tmp2 = tmp1[1].split("[+|/|*|-]");
+        String[] tmp2 = tmp1[1].split("[+|/|*|-]");
         A = tmp2[0];
         B = tmp2[1];
     }
@@ -46,5 +46,5 @@ class Instruction {
     public void setB(String B) {
         this.B = B;
     }
-    
+
 }
