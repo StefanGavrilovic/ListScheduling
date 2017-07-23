@@ -41,12 +41,28 @@ public class Graph {
                 StringTokenizer st = new StringTokenizer(string, " ");
                 NodeGraph node = new NodeGraph(st.nextToken(), st.nextToken(), st.nextToken());
                 nodes.add(node);
-                if (hashMap.containsKey(node.getInstruction().getA())) {
-                    node.addLink(hashMap.get(node.getInstruction().getA()));
+                if (hashMap.containsKey(node.getInstruction().getA()) && hashMap.containsKey(node.getInstruction().getB())) {
+                    NodeGraph nodeA = hashMap.get(node.getInstruction().getA());
+                    NodeGraph nodeB = hashMap.get(node.getInstruction().getB());
+                    if ( nodeA.getInstruction().getA().equals(node.getInstruction().getB()) || nodeA.getInstruction().getB().equals(node.getInstruction().getB())) {
+                        node.addLink(nodeA, Link.DEPENDENCY);
+                        node.addLink(nodeB, Link.TRANSIENT);
+                    }else if ( nodeB.getInstruction().getA().equals(node.getInstruction().getA()) || nodeB.getInstruction().getB().equals(node.getInstruction().getA())) {
+                        node.addLink(nodeA, Link.TRANSIENT);
+                        node.addLink(nodeB, Link.DEPENDENCY);
+                    }else {
+                        node.addLink(hashMap.get(node.getInstruction().getA()), Link.DEPENDENCY);
+                        node.addLink(hashMap.get(node.getInstruction().getB()), Link.DEPENDENCY);
+                    }
+                } else {
+                    if (hashMap.containsKey(node.getInstruction().getA())) {
+                        node.addLink(hashMap.get(node.getInstruction().getA()), Link.DEPENDENCY);
+                    }
+                    if (hashMap.containsKey(node.getInstruction().getB())) {
+                        node.addLink(hashMap.get(node.getInstruction().getB()), Link.DEPENDENCY);
+                    }
                 }
-                if (hashMap.containsKey(node.getInstruction().getB())) {
-                    node.addLink(hashMap.get(node.getInstruction().getB()));
-                }
+
                 hashMap.put(node.getInstruction().getResult(), node);
             }
 
