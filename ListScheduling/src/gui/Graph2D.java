@@ -27,8 +27,12 @@ public class Graph2D extends Group{
     private static final Color TRANSIENT_COLOR = Color.GREEN;
     private static final Color TYPE_UNDETERMINED_COLOR = Color.BLACK;
     
+    private Graph graph;
+    
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public Graph2D(Graph graph){
+        this.graph = graph;
+        
         int level = 0;
         int spread = 0;
         int counter = 0;
@@ -46,7 +50,7 @@ public class Graph2D extends Group{
             else
                 node2D.setTranslateX(-spread * Node2D.NODE_RADIUS*2 - Node2D.NODE_RADIUS*2);
             
-            ListIterator<Link> linksIterator = node.getLinksIterator();
+            ListIterator<Link> linksIterator = node.getPredLinksIterator();
             while(linksIterator.hasNext()){
                 Link link = linksIterator.next();
                 NodeGraph n = link.getNode();
@@ -106,4 +110,13 @@ public class Graph2D extends Group{
             default: return Color.WHITE;
         }
     }
+
+    public Graph getGraph() {
+        return graph;
+    }
+
+    public void setGraph(Graph graph) {
+        this.graph = graph;
+    }
+    
 }

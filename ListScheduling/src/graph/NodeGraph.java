@@ -8,6 +8,7 @@ package graph;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 
 /**
  *
@@ -32,10 +33,13 @@ public class NodeGraph {
      */
     private Instruction instruction;
     /**
-     * Operation that need to be finished, before this one starts.
+     * Operations that need to be finished, before this one starts. Predecessor.
      */
-    private final List<Link> links;
-    //private final boolean drawn;
+    private final List<Link> predLinks;
+    /**
+     * Operations that waits for this operation to be finished. Successor.
+     */
+    private final List<Link> succLinks;
     
     /**
      * The constructor of Node in Graph.
@@ -51,7 +55,8 @@ public class NodeGraph {
         this.ordNumber = Integer.parseInt(name.substring(2));
         this.duration = Integer.parseInt(duration);
         this.instruction = new Instruction(instruction);
-        this.links = new LinkedList<>();
+        this.predLinks = new LinkedList<>();
+        this.succLinks = new LinkedList<>();
     }
 
     public String getName() {
@@ -86,23 +91,60 @@ public class NodeGraph {
         this.instruction = new Instruction(instruction);
     }
 
-    public void addLink(NodeGraph node) {
-        links.add(new Link(node,Link.TYPE_UNDETERMINED));
+    public void addPredLink(NodeGraph node) {
+        predLinks.add(new Link(node,Link.TYPE_UNDETERMINED));
     }
     
-    public void addLink(NodeGraph node, int linkType) {
-        links.add(new Link(node, linkType));
+    public void addPredLink(NodeGraph node, int linkType) {
+        predLinks.add(new Link(node, linkType));
     }
 
-    public NodeGraph getFirstLink() {
-        return links.get(0).getNode();
+    public NodeGraph getFirstPredLink() {
+        return predLinks.get(0).getNode();
     }
 
-    public void removeLink(Link link) {
-        links.remove(link);
+    public void removePredLink(NodeGraph linkNode) {
+        try {
+            predLinks.remove((predLinks.stream().filter(l -> l.getNode().equals(linkNode)).findFirst().get()));
+        } catch(NoSuchElementException e) {
+            System.out.println("No predecessor nodes");
+        }
     }
 
-    public ListIterator<Link> getLinksIterator() {
-        return links.listIterator();
+    public void removePredLink(Link link) {
+        predLinks.remove(link);
     }
+    
+    public ListIterator<Link> getPredLinksIterator() {
+        return predLinks.listIterator();
+    }
+    
+    public void addSuccLink(NodeGraph node) {
+        succLinks.add(new Link(node,Link.TYPE_UNDETERMINED));
+    }
+    
+    public void addSuccLink(NodeGraph node, int linkType) {
+        succLinks.add(new Link(node, linkType));
+    }
+
+    public NodeGraph getFirstSuccLink() {
+        return succLinks.get(0).getNode();
+    }
+
+    public void removeSuccLink(NodeGraph linkNode) {
+        try {
+            succLinks.remove((succLinks.stream().filter(l -> l.getNode().equals(linkNode)).findFirst().get()));
+        }catch (NoSuchElementException e) {
+            System.out.println("No successor nodes");
+        }
+    }
+
+    public void removeSuccLink(Link link) {
+        succLinks.remove(link);
+    }
+    
+    public ListIterator<Link> getSuccLinksIterator() {
+        return succLinks.listIterator();
+    }
+    
 }

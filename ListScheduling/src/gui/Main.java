@@ -22,17 +22,27 @@ public class Main extends Application {
     private static final int WINDOW_WIDTH = 1024;
     private static final int WINDOW_UTILS = 100;
     
+    private Graph graph;
+    
     @Override
     public void start(Stage primaryStage) {
 
         Group root = new Group();
 
-        Graph2D graph = new Graph2D(new Graph("test2.txt"));
-        graph.setTranslateX(WINDOW_WIDTH / 2);
-        graph.setTranslateY(WINDOW_HEIGHT / 20);
-        root.getChildren().add(graph);
+        graph = new Graph("test2.txt");
+        Graph2D g = new Graph2D(graph);
+        g.setTranslateX(WINDOW_WIDTH / 2);
+        g.setTranslateY(WINDOW_HEIGHT / 20);
+        root.getChildren().add(g);
 
         Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
+        scene.setOnMouseClicked(e -> {
+            graph.removeGraphLinks();
+            Graph2D test = new Graph2D(graph);
+            test.setTranslateX(WINDOW_WIDTH / 2);
+            test.setTranslateY(WINDOW_HEIGHT / 15);
+            root.getChildren().add(test);
+        });
         //SubScene test = new SubScene(root, WINDOW_WIDTH, WINDOW_HEIGHT - WINDOW_UTILS);
         
         primaryStage.setTitle("List Scheduling");
