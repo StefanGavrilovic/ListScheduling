@@ -6,10 +6,12 @@
 package gui;
 
 import graph.Graph;
+import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.SubScene;
+import javafx.scene.control.Button;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 /**
@@ -18,37 +20,48 @@ import javafx.stage.Stage;
  */
 public class Main extends Application {
 
-    private static final int WINDOW_HEIGHT = 800;
-    private static final int WINDOW_WIDTH = 1024;
+    private static final double WINDOW_HEIGHT = Screen.getPrimary().getVisualBounds().getHeight();
+    private static final double WINDOW_WIDTH = Screen.getPrimary().getVisualBounds().getWidth();
     private static final int WINDOW_UTILS = 100;
     
-    private Graph graph;
+    private Graph2D graph;
+    
+    private void update() {
+        
+    }
     
     @Override
     public void start(Stage primaryStage) {
 
         Group root = new Group();
 
-        graph = new Graph("test2.txt");
-        Graph2D g = new Graph2D(graph);
-        g.setTranslateX(WINDOW_WIDTH / 2);
-        g.setTranslateY(WINDOW_HEIGHT / 20);
-        root.getChildren().add(g);
-
+        graph = new Graph2D(new Graph("test2.txt"));
+        graph.setTranslateX(WINDOW_WIDTH / 2);
+        graph.setTranslateY(WINDOW_HEIGHT / 20);
+        
+        Button button = new Button("Next");
+        button.setMouseTransparent(false); //for button blocking
+        button.resize(100, 20);
+        
+        root.getChildren().addAll(graph, button);
+        
         Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
-        scene.setOnMouseClicked(e -> {
-            graph.removeGraphLinks();
-            Graph2D test = new Graph2D(graph);
-            test.setTranslateX(WINDOW_WIDTH / 2);
-            test.setTranslateY(WINDOW_HEIGHT / 15);
-            root.getChildren().add(test);
-        });
-        //SubScene test = new SubScene(root, WINDOW_WIDTH, WINDOW_HEIGHT - WINDOW_UTILS);
         
         primaryStage.setTitle("List Scheduling");
         primaryStage.setScene(scene);
-        //primaryStage.setFullScreen(true);
+        primaryStage.setX(Screen.getPrimary().getVisualBounds().getMinX());
+        primaryStage.setY(Screen.getPrimary().getVisualBounds().getMinY());
+        primaryStage.setWidth(WINDOW_WIDTH);
+        primaryStage.setHeight(WINDOW_HEIGHT);
         primaryStage.show();
+        
+        // calling update once every frame
+        new AnimationTimer() {
+            @Override
+            public void handle(long currentNanoTime) {
+                update();
+            }
+        }.start();
     }
 
     /**

@@ -5,6 +5,8 @@
  */
 package graph;
 
+import java.util.ListIterator;
+import junit.framework.Assert;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -18,13 +20,14 @@ import static org.junit.Assert.*;
  */
 public class GraphTest {
     
-    private Graph graph;
+    private static Graph graph;
     
     public GraphTest() {
     }
     
     @BeforeClass
     public static void setUpClass() {
+        graph = new Graph("test2.txt");
     }
     
     @AfterClass
@@ -40,8 +43,21 @@ public class GraphTest {
     }
 
     @Test
-    public void testSomeMethod() {
-        graph = new Graph("test.txt");
+    public void testRemoveLinks() {
+        graph.removeGraphLinks();
+        
+        ListIterator<NodeGraph> nodeIterator = graph.getIterator();
+        
+        while(nodeIterator.hasNext()) {
+            NodeGraph n = nodeIterator.next();
+            
+            ListIterator<Link> linkIterator = n.getSuccLinksIterator();
+            
+            while(linkIterator.hasNext()) {
+                Link l = linkIterator.next();
+                Assert.assertTrue(l.getLinkType() == Link.DEPENDENCY);
+            }
+        }
     }
     
 }

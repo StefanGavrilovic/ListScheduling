@@ -9,11 +9,10 @@ import graph.Graph;
 import graph.Link;
 import graph.NodeGraph;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 import javafx.scene.Group;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.StrokeLineJoin;
 
 /**
  *
@@ -21,17 +20,15 @@ import javafx.scene.shape.StrokeLineJoin;
  */
 public class Graph2D extends Group{
     
-    private static final double STROKE_WIDTH = 2.0;
-    private static final Color DEPEDENCY_COLOR = Color.BLUE;
-    private static final Color ANTI_DEPENDENCY_COLOR = Color.RED;
-    private static final Color TRANSIENT_COLOR = Color.GREEN;
-    private static final Color TYPE_UNDETERMINED_COLOR = Color.BLACK;
-    
     private Graph graph;
+    private List<Node2D> nodes;
+    private List<Link2D> links;
     
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public Graph2D(Graph graph){
         this.graph = graph;
+        this.nodes = new LinkedList<>();
+        this.links = new LinkedList<>();
         
         int level = 0;
         int spread = 0;
@@ -49,16 +46,15 @@ public class Graph2D extends Group{
                 node2D.setTranslateX(spread * Node2D.NODE_RADIUS*2 + (spread == 0 ? Node2D.NODE_RADIUS : Node2D.NODE_RADIUS*2));
             else
                 node2D.setTranslateX(-spread * Node2D.NODE_RADIUS*2 - Node2D.NODE_RADIUS*2);
+            nodes.add(node2D);
             
             ListIterator<Link> linksIterator = node.getPredLinksIterator();
             while(linksIterator.hasNext()){
                 Link link = linksIterator.next();
                 NodeGraph n = link.getNode();
                 Node2D n2D = hashMap.get(n.getName());
-                Line line = createLine(n2D, node2D);
-                line.setStroke(getLineColor(link.getLinkType()));
-                line.setStrokeWidth(STROKE_WIDTH);
-                line.setStrokeLineJoin(StrokeLineJoin.MITER);
+                Link2D line = new Link2D(n2D, node2D, link.getLinkType());
+                links.add(line);
                 this.getChildren().add(line);
             }
             
@@ -77,39 +73,6 @@ public class Graph2D extends Group{
             this.getChildren().add(node2D);
         }
     }
-    
-    public Line createLine(Node2D nodeFrom, Node2D nodeTo){
-        double xFrom = nodeFrom.getTranslateX();
-        double yFrom = nodeFrom.getTranslateY();
-        double xTo = nodeTo.getTranslateX();
-        double yTo = nodeTo.getTranslateY();
-        
-        if( xFrom == xTo ) {
-            yFrom += Node2D.NODE_RADIUS;
-            yTo -= Node2D.NODE_RADIUS;
-        }else if ( xFrom < xTo ){
-            yFrom += yFrom == yTo ? 0 : Node2D.NODE_RADIUS*Math.cos(45);
-            xFrom += Node2D.NODE_RADIUS*(yFrom == yTo ? 1 : Math.sin(45));
-            yTo -= yFrom == yTo ? 0 : Node2D.NODE_RADIUS*Math.cos(45);
-            xTo -= Node2D.NODE_RADIUS*(yFrom == yTo ? 1 : Math.sin(45));
-        }else {
-            yFrom += yFrom == yTo ? 0 : Node2D.NODE_RADIUS*Math.cos(45);
-            xFrom -= Node2D.NODE_RADIUS*(yFrom == yTo ? 1 : Math.sin(45));
-            yTo -= yFrom == yTo ? 0 : Node2D.NODE_RADIUS*Math.cos(45);
-            xTo += Node2D.NODE_RADIUS*(yFrom == yTo ? 1 : Math.sin(45));
-        }
-        return new Line(xFrom, yFrom, xTo, yTo);
-    }
-    
-    public Color getLineColor(int type) {
-        switch(type){
-            case Link.TYPE_UNDETERMINED: return TYPE_UNDETERMINED_COLOR;
-            case Link.DEPENDENCY: return DEPEDENCY_COLOR;
-            case Link.ANTI_DEPENDENCY: return ANTI_DEPENDENCY_COLOR;
-            case Link.TRANSIENT: return TRANSIENT_COLOR;
-            default: return Color.WHITE;
-        }
-    }
 
     public Graph getGraph() {
         return graph;
@@ -118,5 +81,6 @@ public class Graph2D extends Group{
     public void setGraph(Graph graph) {
         this.graph = graph;
     }
+    
     
 }

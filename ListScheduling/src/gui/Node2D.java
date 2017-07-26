@@ -22,7 +22,11 @@ public class Node2D extends Group {
     public static final int TEXT_HEIGHT = 10;
     public static final int TEXT_SIZE = 4;
 
+    private NodeGraph node;
+    
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public Node2D(NodeGraph node) {
+        this.node = node;
         Circle circle = new Circle(NODE_RADIUS);
         circle.setFill(Color.YELLOW);
         circle.setStroke(Color.BLACK);
@@ -30,4 +34,13 @@ public class Node2D extends Group {
 
         this.getChildren().addAll(circle, text);
     }
+
+    public NodeGraph getNode() {
+        return node;
+    }
+
+    public void setNode(NodeGraph node) {
+        this.node = node;
+    }
+    
 }
