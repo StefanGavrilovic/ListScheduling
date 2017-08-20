@@ -6,13 +6,13 @@
 package graph;
 
 import java.util.ListIterator;
-import junit.framework.Assert;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -20,14 +20,14 @@ import static org.junit.Assert.*;
  */
 public class GraphTest {
     
-    private static Graph graph;
+    private Graph graph;
     
     public GraphTest() {
     }
     
     @BeforeClass
     public static void setUpClass() {
-        graph = new Graph("test2.txt");
+        
     }
     
     @AfterClass
@@ -36,12 +36,15 @@ public class GraphTest {
     
     @Before
     public void setUp() {
+        graph = new Graph("test3.txt");
+        graph.criticalPath();
     }
     
     @After
     public void tearDown() {
     }
 
+    @Ignore
     @Test
     public void testRemoveLinks() {
         graph.removeGraphLinks();
@@ -51,13 +54,21 @@ public class GraphTest {
         while(nodeIterator.hasNext()) {
             NodeGraph n = nodeIterator.next();
             
-            ListIterator<Link> linkIterator = n.getSuccLinksIterator();
+            ListIterator<Edge> linkIterator = n.getSuccLinksIterator();
             
             while(linkIterator.hasNext()) {
-                Link l = linkIterator.next();
-                Assert.assertTrue(l.getLinkType() == Link.DEPENDENCY);
+                Edge l = linkIterator.next();
+                Assert.assertTrue(l.getLinkType() == Edge.DEPENDENCY);
             }
         }
     }
     
+    @Test
+    public void testCriticalPath() {
+        
+        double [] expected = {0., 1., 0., 0., 0., 0.};
+        double [] actual = {graph.getFirstNode().getNodeWeight(), graph.getFirstNode().getNodeWeight(), graph.getFirstNode().getNodeWeight(), 
+        graph.getFirstNode().getNodeWeight(), graph.getFirstNode().getNodeWeight(), graph.getFirstNode().getNodeWeight()};
+        Assert.assertArrayEquals(expected, actual, 0);
+    }
 }

@@ -1,0 +1,6 @@
+OP1 4 A=B*C
+OP2 1 D=A+B
+OP3 2 E=A*C
+OP4 2 F=D+E
+OP5 2 K=E/F
+OP6 2 M=F*K

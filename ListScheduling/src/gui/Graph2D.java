@@ -6,7 +6,7 @@
 package gui;
 
 import graph.Graph;
-import graph.Link;
+import graph.Edge;
 import graph.NodeGraph;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -22,7 +22,7 @@ public class Graph2D extends Group{
     
     private Graph graph;
     private List<Node2D> nodes;
-    private List<Link2D> links;
+    private List<Edge2D> links;
     
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public Graph2D(Graph graph){
@@ -36,10 +36,9 @@ public class Graph2D extends Group{
         int mod = 0;
         
         HashMap<String, Node2D> hashMap = new HashMap<>(graph.sizeGraph());
-        while(true){
-            NodeGraph node = graph.getFirstNode();
-            if(node == null)
-                break;
+        ListIterator<NodeGraph> nodesIterator = graph.getIterator();
+        while(nodesIterator.hasNext()){
+            NodeGraph node = nodesIterator.next();
             Node2D node2D = new Node2D(node);
             node2D.setTranslateY(level * Node2D.NODE_RADIUS*3);
             if((counter % 2) == 0)
@@ -48,13 +47,17 @@ public class Graph2D extends Group{
                 node2D.setTranslateX(-spread * Node2D.NODE_RADIUS*2 - Node2D.NODE_RADIUS*2);
             nodes.add(node2D);
             
-            ListIterator<Link> linksIterator = node.getPredLinksIterator();
+            ListIterator<Edge> linksIterator = node.getPredLinksIterator();
             while(linksIterator.hasNext()){
-                Link link = linksIterator.next();
+                Edge link = linksIterator.next();
                 NodeGraph n = link.getNode();
                 Node2D n2D = hashMap.get(n.getName());
-                Link2D line = new Link2D(n2D, node2D, link.getLinkType());
+                Edge2D line = new Edge2D(n2D, node2D, link.getLinkType());
                 links.add(line);
+                Edge l = n.findSuccLink(node);
+                if(l != null ) {
+                    l.setLink2D(line);
+                }
                 this.getChildren().add(line);
             }
             

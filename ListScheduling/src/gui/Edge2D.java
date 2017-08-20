@@ -5,7 +5,7 @@
  */
 package gui;
 
-import graph.Link;
+import graph.Edge;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -15,11 +15,12 @@ import javafx.scene.shape.StrokeLineJoin;
  *
  * @author Stefan
  */
-public class Link2D extends Group {
+public class Edge2D extends Group {
 
     private static final double STROKE_WIDTH = 2.0;
     private static final Color DEPEDENCY_COLOR = Color.BLUE;
     private static final Color ANTI_DEPENDENCY_COLOR = Color.RED;
+    private static final Color OUTGOING_DEPENDENCY_COLOR = Color.ORANGE;
     private static final Color TRANSIENT_COLOR = Color.GREEN;
     private static final Color TYPE_UNDETERMINED_COLOR = Color.BLACK;
 
@@ -29,7 +30,7 @@ public class Link2D extends Group {
     private Node2D nodeTo;
 
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public Link2D(Node2D nodeFrom, Node2D nodeTo, int linkType) {
+    public Edge2D(Node2D nodeFrom, Node2D nodeTo, int linkType) {
         this.nodeFrom = nodeFrom;
         this.nodeTo = nodeTo;
         this.line = createLine(nodeFrom, nodeTo);
@@ -89,14 +90,16 @@ public class Link2D extends Group {
 
     private Color getLineColor(int type) {
         switch (type) {
-            case Link.TYPE_UNDETERMINED:
+            case Edge.TYPE_UNDETERMINED:
                 return TYPE_UNDETERMINED_COLOR;
-            case Link.DEPENDENCY:
+            case Edge.DEPENDENCY:
                 return DEPEDENCY_COLOR;
-            case Link.ANTI_DEPENDENCY:
+            case Edge.ANTI_DEPENDENCY:
                 return ANTI_DEPENDENCY_COLOR;
-            case Link.TRANSIENT:
+            case Edge.TRANSIENT:
                 return TRANSIENT_COLOR;
+            case Edge.OUTGOING_DEPENDENCY:
+                return OUTGOING_DEPENDENCY_COLOR;
             default:
                 return Color.WHITE;
         }

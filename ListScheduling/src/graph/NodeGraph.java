@@ -35,11 +35,19 @@ public class NodeGraph {
     /**
      * Operations that need to be finished, before this one starts. Predecessor.
      */
-    private final List<Link> predLinks;
+    private final List<Edge> predLinks;
     /**
      * Operations that waits for this operation to be finished. Successor.
      */
-    private final List<Link> succLinks;
+    private final List<Edge> succLinks;
+    /**
+     * Approved delay for the execution of the operation.
+     */
+    private int delayCriticalPath;
+    /**
+     * Weight of the node. Heuristic algorithm for List Scheduling.
+     */
+    private double weightNode;
     
     /**
      * The constructor of Node in Graph.
@@ -57,6 +65,8 @@ public class NodeGraph {
         this.instruction = new Instruction(instruction);
         this.predLinks = new LinkedList<>();
         this.succLinks = new LinkedList<>();
+        this.delayCriticalPath = -1;
+        this.weightNode = 0.;
     }
 
     public String getName() {
@@ -92,11 +102,11 @@ public class NodeGraph {
     }
 
     public void addPredLink(NodeGraph node) {
-        predLinks.add(new Link(node,Link.TYPE_UNDETERMINED));
+        predLinks.add(new Edge(node,Edge.TYPE_UNDETERMINED));
     }
     
     public void addPredLink(NodeGraph node, int linkType) {
-        predLinks.add(new Link(node, linkType));
+        predLinks.add(new Edge(node, linkType));
     }
 
     public NodeGraph getFirstPredLink() {
@@ -111,20 +121,21 @@ public class NodeGraph {
         }
     }
 
-    public void removePredLink(Link link) {
+    public void removePredLink(Edge link) {
         predLinks.remove(link);
+        link.removeLink2D(); //test
     }
     
-    public ListIterator<Link> getPredLinksIterator() {
+    public ListIterator<Edge> getPredLinksIterator() {
         return predLinks.listIterator();
     }
     
     public void addSuccLink(NodeGraph node) {
-        succLinks.add(new Link(node,Link.TYPE_UNDETERMINED));
+        succLinks.add(new Edge(node,Edge.TYPE_UNDETERMINED));
     }
     
     public void addSuccLink(NodeGraph node, int linkType) {
-        succLinks.add(new Link(node, linkType));
+        succLinks.add(new Edge(node, linkType));
     }
 
     public NodeGraph getFirstSuccLink() {
@@ -139,12 +150,39 @@ public class NodeGraph {
         }
     }
 
-    public void removeSuccLink(Link link) {
+    public void removeSuccLink(Edge link) {
         succLinks.remove(link);
+        link.removeLink2D(); //test
     }
     
-    public ListIterator<Link> getSuccLinksIterator() {
+    public ListIterator<Edge> getSuccLinksIterator() {
         return succLinks.listIterator();
     }
     
+    public Edge findSuccLink(NodeGraph linkNode) {
+        ListIterator<Edge> iterator = getSuccLinksIterator();
+        while (iterator.hasNext()) {
+            Edge link = iterator.next();
+            if (link.getNode().equals(linkNode)) {
+                return link;
+            }
+        }
+        return null;
+    }
+    
+    public void setDelayCriticalPath(int delay) {
+        this.delayCriticalPath = delay;
+    }
+    
+    public boolean OnCriticalPath() {
+        return this.delayCriticalPath == 0;
+    }
+    
+    public void setNodeWeight(double weight) {
+        this.weightNode = weight;
+    }
+    
+    public double getNodeWeight() {
+        return this.weightNode;
+    }
 }
