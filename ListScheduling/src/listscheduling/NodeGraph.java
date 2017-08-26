@@ -3,19 +3,28 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package graph;
+package listscheduling;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import javafx.scene.Group;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.text.Text;
 
 /**
  *
  * @author Stefan
  */
-public class NodeGraph {
+public class NodeGraph extends Group{
 
+    public static final int NODE_RADIUS = 20;
+    public static final int TEXT_WIDTH = 8;
+    public static final int TEXT_HEIGHT = 10;
+    public static final int TEXT_SIZE = 4;
+    
     /**
      * Name of the operation that this node represent.
      */
@@ -58,6 +67,7 @@ public class NodeGraph {
      * @param instruction
      *          {@link String} instruction to be executed.
      */
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     NodeGraph(String name, String duration, String instruction) {
         this.name = name; 
         this.ordNumber = Integer.parseInt(name.substring(2));
@@ -67,6 +77,14 @@ public class NodeGraph {
         this.succLinks = new LinkedList<>();
         this.delayCriticalPath = -1;
         this.weightNode = 0.;
+        
+        Circle circle = new Circle(NODE_RADIUS);
+        circle.setFill(Color.YELLOW);
+        circle.setStroke(Color.BLACK);
+        Text text = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT / 2, this.name);
+
+        this.getChildren().addAll(circle, text);
+        this.setVisible(false);
     }
 
     public String getName() {
@@ -101,21 +119,21 @@ public class NodeGraph {
         this.instruction = new Instruction(instruction);
     }
 
-    public void addPredLink(NodeGraph node) {
-        predLinks.add(new Edge(node,Edge.TYPE_UNDETERMINED));
+    public void addPredLink(NodeGraph nodeFrom, NodeGraph nodeTo) {
+        predLinks.add(new Edge(nodeFrom, nodeTo, Edge.TYPE_UNDETERMINED));
     }
     
-    public void addPredLink(NodeGraph node, int linkType) {
-        predLinks.add(new Edge(node, linkType));
+    public void addPredLink(NodeGraph nodeFrom, NodeGraph nodeTo, int linkType) {
+        predLinks.add(new Edge(nodeFrom, nodeTo, linkType));
     }
 
     public NodeGraph getFirstPredLink() {
-        return predLinks.get(0).getNode();
+        return predLinks.get(0).getNodeFrom();
     }
 
     public void removePredLink(NodeGraph linkNode) {
         try {
-            predLinks.remove((predLinks.stream().filter(l -> l.getNode().equals(linkNode)).findFirst().get()));
+            predLinks.remove((predLinks.stream().filter(l -> l.getNodeFrom().equals(linkNode)).findFirst().get()));
         } catch(NoSuchElementException e) {
             System.out.println("No predecessor nodes");
         }
@@ -130,21 +148,21 @@ public class NodeGraph {
         return predLinks.listIterator();
     }
     
-    public void addSuccLink(NodeGraph node) {
-        succLinks.add(new Edge(node,Edge.TYPE_UNDETERMINED));
+    public void addSuccLink(NodeGraph nodeFrom, NodeGraph nodeTo) {
+        succLinks.add(new Edge(nodeFrom, nodeTo, Edge.TYPE_UNDETERMINED));
     }
     
-    public void addSuccLink(NodeGraph node, int linkType) {
-        succLinks.add(new Edge(node, linkType));
+    public void addSuccLink(NodeGraph nodeFrom, NodeGraph nodeTo, int linkType) {
+        succLinks.add(new Edge(nodeFrom, nodeTo, linkType));
     }
 
     public NodeGraph getFirstSuccLink() {
-        return succLinks.get(0).getNode();
+        return succLinks.get(0).getNodeTo();
     }
 
     public void removeSuccLink(NodeGraph linkNode) {
         try {
-            succLinks.remove((succLinks.stream().filter(l -> l.getNode().equals(linkNode)).findFirst().get()));
+            succLinks.remove((succLinks.stream().filter(l -> l.getNodeTo().equals(linkNode)).findFirst().get()));
         }catch (NoSuchElementException e) {
             System.out.println("No successor nodes");
         }
@@ -163,7 +181,7 @@ public class NodeGraph {
         ListIterator<Edge> iterator = getSuccLinksIterator();
         while (iterator.hasNext()) {
             Edge link = iterator.next();
-            if (link.getNode().equals(linkNode)) {
+            if (link.getNodeTo().equals(linkNode)) {
                 return link;
             }
         }
@@ -185,4 +203,5 @@ public class NodeGraph {
     public double getNodeWeight() {
         return this.weightNode;
     }
+    
 }

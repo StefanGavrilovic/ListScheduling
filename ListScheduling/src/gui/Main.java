@@ -5,13 +5,13 @@
  */
 package gui;
 
-import graph.Graph;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import listscheduling.Edge;
+import listscheduling.Graphs;
+import listscheduling.NodeGraph;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.AnimationTimer;
@@ -24,6 +24,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Font;
+import javafx.scene.transform.Translate;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
@@ -42,93 +43,48 @@ public class Main extends Application {
     private static final double WINDOW_TOLERANCE = 4;
     private static final double FONT_SIZE = 20;
     
-    private Graph2D graph;
+    /**
+     * Control menu.
+     */
+    private Button buttonNext;
+    private Button buttonPrev;
+    private Button buttonLoad;
+    private Button buttonReload;
+    private TextArea textFromFile;
+    private TextArea textPath;
+    private Group controlBar;
+    private Group buttonBar;
+    
+    /**
+     * Graph.
+     */
+    private List<NodeGraph> nodes;
+    private List<Edge> edges;
+    private Group graph;
+    
+    /**
+     * Scene, root, etc.
+     */
+    private Group root;
+    private Scene scene;
+    private String fileName = "test2.txt";
     
     @Override
     public void start(Stage primaryStage) {
 
-        Group root = new Group();
-
-        graph = new Graph2D(new Graph("test2.txt"));
+        root = new Group();
+        graph = new Group();
+        
+        nodes = Graphs.makeGraphLogic(fileName);
+        edges = Graphs.drawGraph(nodes, graph);
+        
         graph.setTranslateX(WINDOW_WIDTH / 2);
         graph.setTranslateY(WINDOW_HEIGHT / 20);
-        
-        //button nExt
-        Button buttonNext = new Button("Next");
-        buttonNext.setMouseTransparent(false);
-        buttonNext.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonNext.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonNext.setOnMouseClicked((event) -> {
-            if(event.getButton().equals(MouseButton.PRIMARY)){
-                buttonNext.setText("NEXT");
-                graph.getGraph().removeGraphLinks();
-            }
-        });
-        buttonNext.setTranslateX(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE + WINDOW_WIDTH_BUTTON);
-        buttonNext.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2 + WINDOW_HEIGHT_BUTTON);
-        
-        //button Prev
-        Button buttonPrev = new Button("Prev");
-        buttonPrev.setMouseTransparent(false);
-        buttonPrev.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonPrev.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonPrev.setOnMouseClicked((event) -> {
-            if(event.getButton().equals(MouseButton.PRIMARY)){
-                buttonPrev.setText("PREV");
-            }
-        });
-        buttonPrev.setTranslateX(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE);
-        buttonPrev.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2 + WINDOW_HEIGHT_BUTTON);
-        
-        //button Load
-        Button buttonLoad = new Button("Load");
-        buttonLoad.setMouseTransparent(false);
-        buttonLoad.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonLoad.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonLoad.setOnMouseClicked((event) -> {
-            if(event.getButton().equals(MouseButton.PRIMARY)){
-                buttonLoad.setText("LOAD");
-            }
-        });
-        buttonLoad.setTranslateX(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE);
-        buttonLoad.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2);
-        
-        //button Reload
-        Button buttonReload = new Button("Reload");
-        buttonReload.setMouseTransparent(false);
-        buttonReload.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonReload.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonReload.setOnMouseClicked((event) -> {
-            if(event.getButton().equals(MouseButton.PRIMARY)){
-                buttonReload.setText("RELOAD");
-            }
-        });
-        buttonReload.setTranslateX(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE + WINDOW_WIDTH_BUTTON);
-        buttonReload.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2);
-        
-        //text - operations
-        TextArea text = new TextArea();
-        text.setEditable(false);
-        try {
-            text.setText(new String(Files.readAllBytes(Paths.get("test2.txt"))));
-        } catch (IOException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            text.setText("File not found. Check file path.");
-        }
-        text.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT);
-        text.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT);
-        text.setTranslateX(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE);
-        text.setFont(new Font(FONT_SIZE));
-        
-        //text - path
-        TextArea textPath = new TextArea("Relative path..");
-        textPath.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON / 2);
-        textPath.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON / 2);
-        textPath.setTranslateX(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE);
-        textPath.setTranslateY(WINDOW_TEXT_AREA_HEIGHT);
-        
-        root.getChildren().addAll(graph, buttonNext, buttonPrev, buttonLoad, buttonReload, text, textPath);
-        Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        makeMenu();
+
+        root.getChildren().addAll(graph, controlBar);
+        scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 
         primaryStage.setTitle("List Scheduling");
         primaryStage.setScene(scene);
@@ -138,7 +94,7 @@ public class Main extends Application {
         primaryStage.setHeight(WINDOW_HEIGHT);
         primaryStage.setResizable(false);
         primaryStage.show();
-        
+
         // calling update once every frame
         /*new AnimationTimer() {
             @Override
@@ -155,4 +111,86 @@ public class Main extends Application {
         launch(args);
     }
 
+    /**
+     * This method is used for making control menu for interacting with
+     * application.
+     */
+    private void makeMenu() {
+        controlBar = new Group();
+        makeButtonBar();
+
+        textFromFile = new TextArea();
+        textFromFile.setEditable(false);
+        try {
+            textFromFile.setText(new String(Files.readAllBytes(Paths.get(fileName))));
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            textFromFile.setText("File not found. Check file path.");
+        }
+        textFromFile.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT);
+        textFromFile.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT);
+        textFromFile.setFont(new Font(FONT_SIZE));
+
+        textPath = new TextArea("Relative path..");
+        textPath.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON / 2);
+        textPath.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON / 2);
+        textPath.setTranslateY(WINDOW_TEXT_AREA_HEIGHT);
+        
+        controlBar.getChildren().addAll(buttonBar, textFromFile, textPath);
+        controlBar.getTransforms().add(new Translate(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE, 0));
+    }
+
+    private void makeButtonBar() {
+        buttonBar = new Group();
+        
+        buttonNext = new Button("Next");
+        buttonNext.setMouseTransparent(false);
+        buttonNext.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonNext.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonNext.setOnMouseClicked((event) -> {
+            if (event.getButton().equals(MouseButton.PRIMARY)) {
+                buttonNext.setText("NEXT");
+                Graphs.removeGraphLinks(edges);
+            }
+        });
+        buttonNext.setTranslateX(WINDOW_WIDTH_BUTTON);
+        buttonNext.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2 + WINDOW_HEIGHT_BUTTON);
+
+        buttonPrev = new Button("Prev");
+        buttonPrev.setMouseTransparent(false);
+        buttonPrev.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonPrev.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonPrev.setOnMouseClicked((event) -> {
+            if (event.getButton().equals(MouseButton.PRIMARY)) {
+                buttonPrev.setText("PREV");
+            }
+        });
+        buttonPrev.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2 + WINDOW_HEIGHT_BUTTON);
+
+        buttonLoad = new Button("Load");
+        buttonLoad.setMouseTransparent(false);
+        buttonLoad.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonLoad.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonLoad.setOnMouseClicked((event) -> {
+            if (event.getButton().equals(MouseButton.PRIMARY)) {
+                buttonLoad.setText("LOAD");
+            }
+        });
+        buttonLoad.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2);
+
+        buttonReload = new Button("Reload");
+        buttonReload.setMouseTransparent(false);
+        buttonReload.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonReload.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonReload.setOnMouseClicked((event) -> {
+            if (event.getButton().equals(MouseButton.PRIMARY)) {
+                buttonReload.setText("RELOAD");
+            }
+        });
+        buttonReload.setTranslateX(WINDOW_WIDTH_BUTTON);
+        buttonReload.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2);
+        
+        buttonBar.getChildren().addAll(buttonNext, buttonPrev, buttonLoad, buttonReload);
+    }
+    
 }
