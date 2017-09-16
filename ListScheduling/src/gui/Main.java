@@ -112,7 +112,8 @@ public class Main extends Application implements StateMachine {
                 showGraph();
                 break;
             case INSPECT_GRAPH:
-                Graphs.removeGraphLinks(edges);
+                Graphs.removeDeadCode(nodes, edges);
+                Graphs.removeTransientLinks(edges);
                 break;
             case CRITICAL_PATH:
                 Graphs.criticalPath(nodes);

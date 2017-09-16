@@ -9,7 +9,7 @@ package listscheduling;
  *
  * @author Stefan
  */
-class Instruction {
+public class Instruction {
 
     private String result;
     private String A;
@@ -45,6 +45,11 @@ class Instruction {
 
     public void setB(String B) {
         this.B = B;
+    }
+    
+    @Override
+    public String toString() {
+        return String.join(" ", result + "=", A, B);
     }
 
 }

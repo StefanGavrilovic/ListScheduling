@@ -15,9 +15,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.scene.Group;
 
 /**
@@ -66,7 +68,7 @@ public class Graphs {
                 //WW
                 if (hashMap.containsKey(node.getInstruction().getResult())) {
                     NodeGraph nodeRes = hashMap.get(node.getInstruction().getResult());
-                    //dead code - recognize
+                    //dead code - recognize - do not remove
                     boolean deadCode = true;
                     for (int i = nodeRes.getOrdNumber(); i < node.getOrdNumber(); i++) {
                         NodeGraph tempNode = nodes.get(i);
@@ -78,7 +80,7 @@ public class Graphs {
                         }
                     }
                     if (deadCode) {
-                        nodes.remove(nodeRes);
+                        nodeRes.setDeadResult(true);
                         hashMap.remove(nodeRes.getInstruction().getResult());
                     }
                 }
@@ -201,12 +203,25 @@ public class Graphs {
      *
      * @param edges {@link List<Edge>} List of the graph edges.
      */
-    public static void removeGraphLinks(List<Edge> edges) {
-        Arrays.stream((Edge[]) edges.toArray(new Edge[0])).filter(e -> e.compareLinkType(Edge.TRANSIENT)).forEach(e -> {
+    public static void removeTransientLinks(List<Edge> edges) {
+        edges.stream().filter(e -> e.compareLinkType(Edge.TRANSIENT)).forEach(e -> {
             e.getNodeFrom().removeSuccLink(e);
             e.getNodeTo().removePredLink(e);
-            edges.remove(e);
         });
+        edges.removeAll(edges.stream().filter(e -> e.compareLinkType(Edge.TRANSIENT)).collect(Collectors.toList()));
+    }
+
+    /**
+     * This method is used to remove nodes from the graph, that represents dead
+     * code
+     *
+     * @param nodes {@link List<NodeGraph>} List of the graph nodes.
+     * @param edges {@link List<Edge>} List of the graph edges.
+     */
+    public static void removeDeadCode(List<NodeGraph> nodes, List<Edge> edges) {
+        nodes.stream().filter(node -> node.isDeadResult())
+                .forEach(n -> removeNode(nodes, edges, n));
+        nodes.removeAll(nodes.stream().filter(n -> n.isDeadResult()).collect(Collectors.toList()));
     }
 
     /**
@@ -214,21 +229,24 @@ public class Graphs {
      *
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      * @param edges {@link List<Edge>} List of the shown graph edges.
-     * @param node {@link NodeGraph} Node to be deleted.
+     * @param deadNode {@link NodeGraph} Node to be deleted.
      */
-    public static void removeNode(List<NodeGraph> nodes, List<Edge> edges, NodeGraph node) {
-        if (node != null) {
-            nodes.remove(node);
-            Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0])).forEach(n -> {
+    public static void removeNode(List<NodeGraph> nodes, List<Edge> edges, NodeGraph deadNode) {
+        Optional.ofNullable(deadNode).ifPresent(node -> {
+            nodes.stream().filter(test -> !test.isDeadResult()).forEach(n -> {
+                node.setVisible(false);
                 n.removePredLink(node);
                 n.removeSuccLink(node);
-                Arrays.stream((Edge[]) edges.toArray(new Edge[0]))
-                        .filter(e -> e.checkEdge(n, node)).findFirst().ifPresent(e -> edges.remove(e));
-                Arrays.stream((Edge[]) edges.toArray(new Edge[0]))
-                        .filter(e -> e.checkEdge(node, n)).findFirst().ifPresent(e -> edges.remove(e));
-                n.setVisible(false);
+                edges.stream().filter(e -> e.checkEdge(n, node)).findFirst().ifPresent(e -> {
+                    edges.remove(e);
+                    e.setVisible(false);
+                });
+                edges.stream().filter(e -> e.checkEdge(node, n)).findFirst().ifPresent(e -> {
+                    edges.remove(e);
+                    e.setVisible(false);
+                });
             });
-        }
+        });
     }
 
     /**
@@ -281,8 +299,8 @@ public class Graphs {
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      */
     public static void determineHeuristicWeights(List<NodeGraph> nodes) {
-        if (Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0])).allMatch(e -> e.getNodeWeight() == -1.0)) {
-            Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0])).forEach(e -> e.setNodeWeight(0.0));
+        if (nodes.stream().allMatch(e -> e.getNodeWeight() == -1.0)) {
+            nodes.forEach(e -> e.setNodeWeight(0.0));
             NodeGraph[] arrayNodes = (NodeGraph[]) nodes.toArray(new NodeGraph[0]);
 
             for (int i = nodes.size() - 1; i >= 0; i++) {

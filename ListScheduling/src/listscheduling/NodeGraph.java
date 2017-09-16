@@ -8,7 +8,7 @@ package listscheduling;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.NoSuchElementException;
+import java.util.Optional;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -61,6 +61,10 @@ public class NodeGraph extends Group{
      * Body of the Node to be shown on scene.
      */
     private final Circle body;
+    /**
+     * Flag to mark dead code.
+     */
+    private boolean deadResult;
     
     /**
      * The constructor of Node in Graph.
@@ -81,6 +85,7 @@ public class NodeGraph extends Group{
         this.succLinks = new LinkedList<>();
         this.delayCriticalPath = -1;
         this.weightNode = -1.0;
+        this.deadResult = false;
         
         body = new Circle(NODE_RADIUS);
         body.setFill(Color.YELLOW);
@@ -139,6 +144,15 @@ public class NodeGraph extends Group{
         return this.weightNode;
     }
 
+    public boolean isDeadResult() {
+        return deadResult;
+    }
+
+    public void setDeadResult(boolean deadResult) {
+        this.deadResult = deadResult;
+        this.body.setFill(Color.LIGHTGRAY);
+    }
+
     public void addPredLink(NodeGraph nodeFrom, NodeGraph nodeTo) {
         predLinks.add(new Edge(nodeFrom, nodeTo, Edge.TYPE_UNDETERMINED));
     }
@@ -156,11 +170,9 @@ public class NodeGraph extends Group{
     }
 
     public void removePredLink(NodeGraph linkNode) {
-        try {
-            predLinks.remove((predLinks.stream().filter(l -> l.getNodeFrom().equals(linkNode)).findFirst().get()));
-        } catch(NoSuchElementException e) {
-            System.out.println("No predecessor nodes");
-        }
+        Optional.ofNullable(predLinks).ifPresent(links -> {
+            Optional.ofNullable(links.stream().filter(l -> l.getNodeFrom().equals(linkNode)).findFirst().orElse(null)).ifPresent(l -> links.remove(l));
+        });
     }
 
     public void removePredLink(Edge link) {
@@ -185,11 +197,9 @@ public class NodeGraph extends Group{
     }
 
     public void removeSuccLink(NodeGraph linkNode) {
-        try {
-            succLinks.remove((succLinks.stream().filter(l -> l.getNodeTo().equals(linkNode)).findFirst().get()));
-        }catch (NoSuchElementException e) {
-            System.out.println("No successor nodes");
-        }
+        Optional.ofNullable(succLinks).ifPresent(links -> {
+            Optional.ofNullable(links.stream().filter(l -> l.getNodeTo().equals(linkNode)).findFirst().orElse(null)).ifPresent(l -> links.remove(l));
+        });
     }
 
     public void removeSuccLink(Edge link) {
@@ -214,6 +224,10 @@ public class NodeGraph extends Group{
     
     public void changeBodyColor(Color color) {
         this.body.setFill(color);
+    }
+    
+    public boolean compareNode(NodeGraph node) {
+        return this.getName().contentEquals(node.getName());
     }
     
 }
