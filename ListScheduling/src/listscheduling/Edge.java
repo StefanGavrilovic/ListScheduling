@@ -136,7 +136,7 @@ public class Edge extends Group {
      *
      * @return {@link int} ID of the link type.
      */
-    public int getLinkType() {
+    public int getEdgeType() {
         return linkType;
     }
 
@@ -145,19 +145,22 @@ public class Edge extends Group {
      *
      * @param linkType {@link int} ID of the link type.
      */
-    public void setLinkType(int linkType) {
+    public void setEdgeType(int linkType) {
         this.linkType = linkType;
     }
 
     /**
      * Hides link from the scene. TODO: See what is better way to remove it.
      */
-    public void removeLink2D() {
+    public void hideEdge() {
         if ((line != null) && line.isVisible()) {
             line.setVisible(false);
         }
     }
 
+    /**
+     * Draws line on scene that represents edge in graph.
+     */
     public void drawLine() {
         if (line == null) {
             this.line = createLine(nodeFrom, nodeTo);
@@ -169,6 +172,37 @@ public class Edge extends Group {
         }
     }
 
+    /**
+     * This method checks if this edge is between given nodes.
+     * 
+     * @param nodeFrom {@link NodeGraph} Node from searched edge is directed.
+     * @param nodeTo {@link NodeGraph} Node to searched edge is directed.
+     * 
+     * @return {@link boolean}  
+     */
+    public boolean checkEdge(NodeGraph nodeFrom, NodeGraph nodeTo) {
+        return this.getNodeFrom().equals(nodeFrom) && this.getNodeTo().equals(nodeTo);
+    }
+    
+    /**
+     * This method compares given type with edge type.
+     * 
+     * @param linkType {@link int} Given type.
+     * 
+     * @return {@link boolean} Returns if edge type and the given are equal.
+     */
+    public boolean compareLinkType(int linkType) {
+        return this.linkType == linkType;
+    }
+    
+    /**
+     * Creates line that represents edge between given nodes.
+     * 
+     * @param nodeFrom {@link NodeGraph} Node from which line is drawn.
+     * @param nodeTo {@link NodeGraph} Node to is line directed.
+     * 
+     * @return {@link Line} Created line as 2D object.
+     */
     private Line createLine(NodeGraph nodeFrom, NodeGraph nodeTo) {
         double xFrom = nodeFrom.getTranslateX();
         double yFrom = nodeFrom.getTranslateY();
@@ -192,6 +226,13 @@ public class Edge extends Group {
         return new Line(xFrom, yFrom, xTo, yTo);
     }
 
+    /**
+     * Getter for the color of the line by its type.
+     * 
+     * @param type {@link int} Type of edge/line.
+     * 
+     * @return {@link Color} Color of the line.
+     */
     private Color getLineColor(int type) {
         switch (type) {
             case Edge.TYPE_UNDETERMINED:
@@ -208,5 +249,5 @@ public class Edge extends Group {
                 return Color.WHITE;
         }
     }
-
+    
 }

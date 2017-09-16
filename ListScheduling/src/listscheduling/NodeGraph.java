@@ -57,6 +57,10 @@ public class NodeGraph extends Group{
      * Weight of the node. Heuristic algorithm for List Scheduling.
      */
     private double weightNode;
+    /**
+     * Body of the Node to be shown on scene.
+     */
+    private final Circle body;
     
     /**
      * The constructor of Node in Graph.
@@ -76,14 +80,14 @@ public class NodeGraph extends Group{
         this.predLinks = new LinkedList<>();
         this.succLinks = new LinkedList<>();
         this.delayCriticalPath = -1;
-        this.weightNode = 0.;
+        this.weightNode = -1.0;
         
-        Circle circle = new Circle(NODE_RADIUS);
-        circle.setFill(Color.YELLOW);
-        circle.setStroke(Color.BLACK);
+        body = new Circle(NODE_RADIUS);
+        body.setFill(Color.YELLOW);
+        body.setStroke(Color.BLACK);
         Text text = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT / 2, this.name);
 
-        this.getChildren().addAll(circle, text);
+        this.getChildren().addAll(body, text);
         this.setVisible(false);
     }
 
@@ -118,6 +122,22 @@ public class NodeGraph extends Group{
     public void setInstruction(String instruction) {
         this.instruction = new Instruction(instruction);
     }
+    
+    public void setDelayCriticalPath(int delay) {
+        this.delayCriticalPath = delay;
+    }
+    
+    public boolean OnCriticalPath() {
+        return this.delayCriticalPath == 0;
+    }
+    
+    public void setNodeWeight(double weight) {
+        this.weightNode = weight;
+    }
+    
+    public double getNodeWeight() {
+        return this.weightNode;
+    }
 
     public void addPredLink(NodeGraph nodeFrom, NodeGraph nodeTo) {
         predLinks.add(new Edge(nodeFrom, nodeTo, Edge.TYPE_UNDETERMINED));
@@ -127,6 +147,10 @@ public class NodeGraph extends Group{
         predLinks.add(new Edge(nodeFrom, nodeTo, linkType));
     }
 
+    public boolean isEmptyPredLinksList() {
+        return this.predLinks.isEmpty();
+    }
+    
     public NodeGraph getFirstPredLink() {
         return predLinks.get(0).getNodeFrom();
     }
@@ -141,7 +165,7 @@ public class NodeGraph extends Group{
 
     public void removePredLink(Edge link) {
         predLinks.remove(link);
-        link.removeLink2D(); //test
+        link.hideEdge(); //test
     }
     
     public ListIterator<Edge> getPredLinksIterator() {
@@ -170,7 +194,7 @@ public class NodeGraph extends Group{
 
     public void removeSuccLink(Edge link) {
         succLinks.remove(link);
-        link.removeLink2D(); //test
+        link.hideEdge(); //test
     }
     
     public ListIterator<Edge> getSuccLinksIterator() {
@@ -188,20 +212,8 @@ public class NodeGraph extends Group{
         return null;
     }
     
-    public void setDelayCriticalPath(int delay) {
-        this.delayCriticalPath = delay;
-    }
-    
-    public boolean OnCriticalPath() {
-        return this.delayCriticalPath == 0;
-    }
-    
-    public void setNodeWeight(double weight) {
-        this.weightNode = weight;
-    }
-    
-    public double getNodeWeight() {
-        return this.weightNode;
+    public void changeBodyColor(Color color) {
+        this.body.setFill(color);
     }
     
 }

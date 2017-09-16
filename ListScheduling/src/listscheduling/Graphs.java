@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -201,32 +202,32 @@ public class Graphs {
      * @param edges {@link List<Edge>} List of the graph edges.
      */
     public static void removeGraphLinks(List<Edge> edges) {
-        ListIterator<Edge> iterator = edges.listIterator();
-        while(iterator.hasNext()) {
-            Edge edge = iterator.next();
-            if (edge.getLinkType() == Edge.TRANSIENT) {
-                edge.getNodeFrom().removeSuccLink(edge);
-                edge.getNodeTo().removePredLink(edge);
-                edges.remove(edge);
-            }
-        }
+        Arrays.stream((Edge[]) edges.toArray(new Edge[0])).filter(e -> e.compareLinkType(Edge.TRANSIENT)).forEach(e -> {
+            e.getNodeFrom().removeSuccLink(e);
+            e.getNodeTo().removePredLink(e);
+            edges.remove(e);
+        });
     }
-    
+
     /**
      * This method is used for deleting the node and its links in graph.
      *
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
+     * @param edges {@link List<Edge>} List of the shown graph edges.
      * @param node {@link NodeGraph} Node to be deleted.
      */
-    public static void removeNodeLinks(List<NodeGraph> nodes, NodeGraph node) {
+    public static void removeNode(List<NodeGraph> nodes, List<Edge> edges, NodeGraph node) {
         if (node != null) {
             nodes.remove(node);
-            ListIterator<NodeGraph> iterator = nodes.listIterator();
-            while (iterator.hasNext()) {
-                NodeGraph n = iterator.next();
+            Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0])).forEach(n -> {
                 n.removePredLink(node);
                 n.removeSuccLink(node);
-            }
+                Arrays.stream((Edge[]) edges.toArray(new Edge[0]))
+                        .filter(e -> e.checkEdge(n, node)).findFirst().ifPresent(e -> edges.remove(e));
+                Arrays.stream((Edge[]) edges.toArray(new Edge[0]))
+                        .filter(e -> e.checkEdge(node, n)).findFirst().ifPresent(e -> edges.remove(e));
+                n.setVisible(false);
+            });
         }
     }
 
@@ -236,38 +237,40 @@ public class Graphs {
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      */
     public static void criticalPath(List<NodeGraph> nodes) {
-        int[] est = new int[nodes.size()];
-        int[] lst = new int[nodes.size()];
+        if (Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0])).noneMatch(e -> e.OnCriticalPath())) {
+            int[] est = new int[nodes.size()];
+            int[] lst = new int[nodes.size()];
 
-        NodeGraph[] arrayNodes = (NodeGraph[]) nodes.toArray(new NodeGraph[0]);
-        est[0] = 0;
+            NodeGraph[] arrayNodes = (NodeGraph[]) nodes.toArray(new NodeGraph[0]);
+            est[0] = 0;
 
-        for (int i = 1; i < nodes.size(); i++) {
-            int max = 0;
-            ListIterator iteratorPrev = (arrayNodes[i]).getPredLinksIterator();
-            while (iteratorPrev.hasNext()) {
-                NodeGraph prevNode = ((Edge) iteratorPrev.next()).getNodeFrom();
-                int index = nodes.indexOf(prevNode);
-                max = max > (prevNode.getDuration() + est[index]) ? max : (prevNode.getDuration() + est[index]);
+            for (int i = 1; i < nodes.size(); i++) {
+                int max = 0;
+                ListIterator iteratorPrev = (arrayNodes[i]).getPredLinksIterator();
+                while (iteratorPrev.hasNext()) {
+                    NodeGraph prevNode = ((Edge) iteratorPrev.next()).getNodeFrom();
+                    int index = nodes.indexOf(prevNode);
+                    max = max > (prevNode.getDuration() + est[index]) ? max : (prevNode.getDuration() + est[index]);
+                }
+                est[i] = max;
             }
-            est[i] = max;
-        }
 
-        lst[nodes.size() - 1] = est[nodes.size() - 1];// + (arrayNodes[nodes.size() - 1]).getDuration();//provjeriti!
+            lst[nodes.size() - 1] = est[nodes.size() - 1];// + (arrayNodes[nodes.size() - 1]).getDuration();//provjeriti!
 
-        for (int i = nodes.size() - 2; i > 0; i--) {
-            int min = Integer.MAX_VALUE;
-            ListIterator iteratorSucc = (arrayNodes[i]).getSuccLinksIterator();
-            while (iteratorSucc.hasNext()) {
-                NodeGraph succNode = ((Edge) iteratorSucc.next()).getNodeTo();
-                int index = nodes.indexOf(succNode);
-                min = min < (lst[index] - (arrayNodes[i]).getDuration()) ? min : (lst[index] - (arrayNodes[i]).getDuration());
+            for (int i = nodes.size() - 2; i > 0; i--) {
+                int min = Integer.MAX_VALUE;
+                ListIterator iteratorSucc = (arrayNodes[i]).getSuccLinksIterator();
+                while (iteratorSucc.hasNext()) {
+                    NodeGraph succNode = ((Edge) iteratorSucc.next()).getNodeTo();
+                    int index = nodes.indexOf(succNode);
+                    min = min < (lst[index] - (arrayNodes[i]).getDuration()) ? min : (lst[index] - (arrayNodes[i]).getDuration());
+                }
+                lst[i] = min;
             }
-            lst[i] = min;
-        }
 
-        for (int i = 0; i < nodes.size() - 1; i++) {
-            (arrayNodes[i]).setDelayCriticalPath(lst[i] - est[i]);
+            for (int i = 0; i < nodes.size() - 1; i++) {
+                (arrayNodes[i]).setDelayCriticalPath(lst[i] - est[i]);
+            }
         }
     }
 
@@ -278,10 +281,13 @@ public class Graphs {
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      */
     public static void determineHeuristicWeights(List<NodeGraph> nodes) {
-        NodeGraph[] arrayNodes = (NodeGraph[]) nodes.toArray();
+        if (Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0])).allMatch(e -> e.getNodeWeight() == -1.0)) {
+            Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0])).forEach(e -> e.setNodeWeight(0.0));
+            NodeGraph[] arrayNodes = (NodeGraph[]) nodes.toArray(new NodeGraph[0]);
 
-        for (int i = nodes.size() - 1; i >= 0; i++) {
-            (arrayNodes[i]).setNodeWeight(succWeight(arrayNodes[i], 1));
+            for (int i = nodes.size() - 1; i >= 0; i++) {
+                (arrayNodes[i]).setNodeWeight(succWeight(arrayNodes[i], 1));
+            }
         }
     }
 

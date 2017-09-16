@@ -9,33 +9,29 @@ package listscheduling;
  *
  * @author Stefan
  */
-public class StateMachine {
-    
-    private enum state {
+public interface StateMachine {
+
+    /**
+     * States of the algorithm.
+     */
+    public enum state {
         START, LOAD_GRAPH, INSPECT_GRAPH, CRITICAL_PATH, RUN_ALGORITHM
     };
-    private String activeState;
 
-    public StateMachine() {
-        this.activeState = state.START.name();
-    }
-    
-    public boolean execute() {
-        switch(state.valueOf(activeState)){
-            case START: break;
-            case LOAD_GRAPH: break;
-            case INSPECT_GRAPH: break;
-            case CRITICAL_PATH: break;
-            case RUN_ALGORITHM: break;
-        }
-        return false;
-    }
-    
-    public void nextState() {
-        activeState = (state.values()[(state.valueOf(activeState).ordinal()) + 1]).name();
-    }
-    
-    public String getCurrentState() {
-        return activeState;
-    }
+    /**
+     * This method should execute methods that belong to the current state of
+     * algorithm.
+     */
+    public void execute();
+
+    /**
+     * This method sets current state to the next state of the algorithm.
+     */
+    public void nextState();
+
+    /**
+     * This method sets current state to the previous state of the algorithm.
+     */
+    public void prevState();
+
 }

@@ -11,6 +11,7 @@ import listscheduling.NodeGraph;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,22 +28,23 @@ import javafx.scene.text.Font;
 import javafx.scene.transform.Translate;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import listscheduling.StateMachine;
 
 /**
  *
  * @author Stefan
  */
-public class Main extends Application {
+public class Main extends Application implements StateMachine {
 
-    private static final double WINDOW_HEIGHT = Screen.getPrimary().getVisualBounds().getHeight();
-    private static final double WINDOW_WIDTH = Screen.getPrimary().getVisualBounds().getWidth();
+    public static final double WINDOW_HEIGHT = Screen.getPrimary().getVisualBounds().getHeight();
+    public static final double WINDOW_WIDTH = Screen.getPrimary().getVisualBounds().getWidth();
     private static final double WINDOW_WIDTH_UTILS = WINDOW_WIDTH / 6;
     private static final double WINDOW_TEXT_AREA_HEIGHT = WINDOW_HEIGHT / 2;
     private static final double WINDOW_WIDTH_BUTTON = WINDOW_WIDTH_UTILS / 2;
     private static final double WINDOW_HEIGHT_BUTTON = WINDOW_HEIGHT / 20;
     private static final double WINDOW_TOLERANCE = 4;
     private static final double FONT_SIZE = 20;
-    
+
     /**
      * Control menu.
      */
@@ -54,36 +56,33 @@ public class Main extends Application {
     private TextArea textPath;
     private Group controlBar;
     private Group buttonBar;
-    
+
     /**
      * Graph.
      */
     private List<NodeGraph> nodes;
     private List<Edge> edges;
-    private Group graph;
-    
+    private Group graph = null;
+
     /**
-     * Scene, root, etc.
+     * Stage, scene, root, etc.
      */
-    private Group root;
-    private Scene scene;
-    private String fileName = "test2.txt";
-    
+    private Stage mainStage = null;
+    private Group root = null;
+    private Scene scene = null;
+    private final String fileName = "test2.txt";
+    private StateMachine.state currentState;
+
     @Override
     public void start(Stage primaryStage) {
-
+        mainStage = primaryStage;
         root = new Group();
-        graph = new Group();
-        
-        nodes = Graphs.makeGraphLogic(fileName);
-        edges = Graphs.drawGraph(nodes, graph);
-        
-        graph.setTranslateX(WINDOW_WIDTH / 2);
-        graph.setTranslateY(WINDOW_HEIGHT / 20);
 
+        currentState = state.START;
+        System.out.println(currentState.name() + " " + currentState.ordinal());
         makeMenu();
 
-        root.getChildren().addAll(graph, controlBar);
+        root.getChildren().addAll(controlBar);
         scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 
         primaryStage.setTitle("List Scheduling");
@@ -94,14 +93,6 @@ public class Main extends Application {
         primaryStage.setHeight(WINDOW_HEIGHT);
         primaryStage.setResizable(false);
         primaryStage.show();
-
-        // calling update once every frame
-        /*new AnimationTimer() {
-            @Override
-            public void handle(long currentNanoTime) {
-                update();
-            }
-        }.start();*/
     }
 
     /**
@@ -109,6 +100,79 @@ public class Main extends Application {
      */
     public static void main(String[] args) {
         launch(args);
+    }
+
+    @Override
+    public void execute() {
+        switch (currentState) {
+            case START:
+                initApplication();
+                break;
+            case LOAD_GRAPH:
+                showGraph();
+                break;
+            case INSPECT_GRAPH:
+                Graphs.removeGraphLinks(edges);
+                break;
+            case CRITICAL_PATH:
+                Graphs.criticalPath(nodes);
+                break;
+            case RUN_ALGORITHM:
+                Graphs.determineHeuristicWeights(nodes);
+                break;
+        }
+    }
+
+    @Override
+    public void nextState() {
+        if (currentState != state.RUN_ALGORITHM) {
+            System.out.println(currentState.name() + " " + currentState.ordinal());
+            currentState = state.values()[currentState.ordinal() + 1];
+            System.out.println(currentState.name() + " " + currentState.ordinal());
+        }
+    }
+
+    @Override
+    public void prevState() {
+        if (currentState != state.START) {
+            System.out.println(currentState.name() + " " + currentState.ordinal());
+            currentState = state.values()[currentState.ordinal() - 1];
+            System.out.println(currentState.name() + " " + currentState.ordinal());
+        }
+    }
+
+    /**
+     * Initialize application and creates all control and other parts of the
+     * window of this application.
+     */
+    private void initApplication() {
+        mainStage.close();
+        root = null;
+        scene = null;
+        graph = null;
+        edges.clear();
+        nodes.clear();
+        clearMenu();
+        start(new Stage());
+    }
+
+    /**
+     * This method is used for drawing graph on scene.
+     */
+    private void showGraph() {
+        if (graph != null) {
+            Arrays.stream((NodeGraph[])nodes.toArray(new NodeGraph[0])).forEach(e -> Graphs.removeNode(nodes, edges, e));
+            nodes.clear();
+            edges.clear();
+            graph = null;
+        }
+        graph = new Group();
+        nodes = Graphs.makeGraphLogic(fileName);
+        edges = Graphs.drawGraph(nodes, graph);
+
+        graph.setTranslateX(WINDOW_WIDTH / 2);
+        graph.setTranslateY(WINDOW_HEIGHT / 20);
+        root.getChildren().add(graph);
     }
 
     /**
@@ -135,62 +199,79 @@ public class Main extends Application {
         textPath.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON / 2);
         textPath.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON / 2);
         textPath.setTranslateY(WINDOW_TEXT_AREA_HEIGHT);
-        
+
         controlBar.getChildren().addAll(buttonBar, textFromFile, textPath);
         controlBar.getTransforms().add(new Translate(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE, 0));
     }
 
+    /**
+     * This method is used for deleting control menu.
+     */
+    private void clearMenu() {
+        controlBar = null;
+        buttonBar = null;
+        buttonLoad = null;
+        buttonNext = null;
+        buttonPrev = null;
+        buttonReload = null;
+        textFromFile = null;
+        textPath = null;
+    }
+
+    /**
+     * This method is used for making button menu for interacting with
+     * application.
+     */
     private void makeButtonBar() {
         buttonBar = new Group();
-        
-        buttonNext = new Button("Next");
-        buttonNext.setMouseTransparent(false);
-        buttonNext.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonNext.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+
+        buttonNext = createButton("Next", WINDOW_WIDTH_BUTTON,
+                WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2 + WINDOW_HEIGHT_BUTTON);
         buttonNext.setOnMouseClicked((event) -> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 buttonNext.setText("NEXT");
-                Graphs.removeGraphLinks(edges);
+                nextState();
+                execute();
             }
         });
-        buttonNext.setTranslateX(WINDOW_WIDTH_BUTTON);
-        buttonNext.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2 + WINDOW_HEIGHT_BUTTON);
 
-        buttonPrev = new Button("Prev");
-        buttonPrev.setMouseTransparent(false);
-        buttonPrev.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonPrev.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonPrev = createButton("Prev", 0,
+                WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2 + WINDOW_HEIGHT_BUTTON);
         buttonPrev.setOnMouseClicked((event) -> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 buttonPrev.setText("PREV");
+                prevState();
+                execute();
             }
         });
-        buttonPrev.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2 + WINDOW_HEIGHT_BUTTON);
 
-        buttonLoad = new Button("Load");
-        buttonLoad.setMouseTransparent(false);
-        buttonLoad.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonLoad.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonLoad = createButton("Load", 0,
+                WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2);
         buttonLoad.setOnMouseClicked((event) -> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 buttonLoad.setText("LOAD");
             }
         });
-        buttonLoad.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2);
 
-        buttonReload = new Button("Reload");
-        buttonReload.setMouseTransparent(false);
-        buttonReload.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
-        buttonReload.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        buttonReload = createButton("Reload", WINDOW_WIDTH_BUTTON,
+                WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2);
         buttonReload.setOnMouseClicked((event) -> {
             if (event.getButton().equals(MouseButton.PRIMARY)) {
                 buttonReload.setText("RELOAD");
             }
         });
-        buttonReload.setTranslateX(WINDOW_WIDTH_BUTTON);
-        buttonReload.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON / 2);
-        
+
         buttonBar.getChildren().addAll(buttonNext, buttonPrev, buttonLoad, buttonReload);
     }
-    
+
+    private Button createButton(String name, double x, double y) {
+        Button button = new Button(name);
+        button.setMouseTransparent(false);
+        button.setMinSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        button.setMaxSize(WINDOW_WIDTH_BUTTON, WINDOW_HEIGHT_BUTTON);
+        button.setTranslateX(x);
+        button.setTranslateY(y);
+        return button;
+    }
+
 }
