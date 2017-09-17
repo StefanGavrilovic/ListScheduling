@@ -20,7 +20,7 @@ import javafx.scene.text.Text;
  */
 public class NodeGraph extends Group{
 
-    public static final int NODE_RADIUS = 20;
+    public static final int NODE_RADIUS = 40;
     public static final int TEXT_WIDTH = 8;
     public static final int TEXT_HEIGHT = 10;
     public static final int TEXT_SIZE = 4;
@@ -65,6 +65,7 @@ public class NodeGraph extends Group{
      * Flag to mark dead code.
      */
     private boolean deadResult;
+    private Text textW;
     
     /**
      * The constructor of Node in Graph.
@@ -91,8 +92,9 @@ public class NodeGraph extends Group{
         body.setFill(Color.YELLOW);
         body.setStroke(Color.BLACK);
         Text text = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT / 2, this.name);
+        textW = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT * 2, String.valueOf(this.weightNode));
 
-        this.getChildren().addAll(body, text);
+        this.getChildren().addAll(body, text, textW);
         this.setVisible(false);
     }
 
@@ -138,6 +140,7 @@ public class NodeGraph extends Group{
     
     public void setNodeWeight(double weight) {
         this.weightNode = weight;
+        this.textW.setText(String.valueOf(weight));
     }
     
     public double getNodeWeight() {
@@ -163,6 +166,10 @@ public class NodeGraph extends Group{
 
     public boolean isEmptyPredLinksList() {
         return this.predLinks.isEmpty();
+    }
+    
+    public boolean isEmptySuccLinksList() {
+        return this.succLinks.isEmpty();
     }
     
     public NodeGraph getFirstPredLink() {
@@ -228,6 +235,10 @@ public class NodeGraph extends Group{
     
     public boolean compareNode(NodeGraph node) {
         return this.getName().contentEquals(node.getName());
+    }
+    
+    public void refreshWeights(double weight) {
+        this.textW.setText(String.valueOf(weight));
     }
     
 }

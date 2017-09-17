@@ -15,7 +15,7 @@ public interface StateMachine {
      * States of the algorithm.
      */
     public enum state {
-        START, LOAD_GRAPH, INSPECT_GRAPH, CRITICAL_PATH, RUN_ALGORITHM
+        START, LOAD_GRAPH, INSPECT_GRAPH, CRITICAL_PATH, RUN_ALGORITHM, EXECUTE
     };
 
     /**

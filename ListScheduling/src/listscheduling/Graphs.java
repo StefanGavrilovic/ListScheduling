@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.scene.Group;
+import javafx.scene.paint.Color;
 
 /**
  * Utility Graphs class used for creating graph in application.
@@ -213,7 +214,7 @@ public class Graphs {
 
     /**
      * This method is used to remove nodes from the graph, that represents dead
-     * code
+     * code.
      *
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      * @param edges {@link List<Edge>} List of the graph edges.
@@ -222,6 +223,20 @@ public class Graphs {
         nodes.stream().filter(node -> node.isDeadResult())
                 .forEach(n -> removeNode(nodes, edges, n));
         nodes.removeAll(nodes.stream().filter(n -> n.isDeadResult()).collect(Collectors.toList()));
+    }
+
+    /**
+     * This method is used to check for more dead code, after deleting dead code
+     * with method removeDeadCode.
+     *
+     * @param nodes {@link List<NodeGraph>} List of the graph nodes.
+     * @param edges {@link List<Edge>} List of the graph edges.
+     */
+    public static void checkForNewDeadCode(List<NodeGraph> nodes, List<Edge> edges) {
+        while (nodes.stream().filter(node -> node.isEmptySuccLinksList()).count() > 0) {
+            nodes.stream().filter(node -> node.isEmptySuccLinksList()).forEach(n -> n.setDeadResult(true));
+            removeDeadCode(nodes, edges);
+        }
     }
 
     /**
@@ -255,7 +270,7 @@ public class Graphs {
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      */
     public static void criticalPath(List<NodeGraph> nodes) {
-        if (Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0])).noneMatch(e -> e.OnCriticalPath())) {
+        if (nodes.stream().noneMatch(e -> e.OnCriticalPath())) {
             int[] est = new int[nodes.size()];
             int[] lst = new int[nodes.size()];
 
@@ -286,9 +301,11 @@ public class Graphs {
                 lst[i] = min;
             }
 
-            for (int i = 0; i < nodes.size() - 1; i++) {
+            for (int i = 0; i < nodes.size(); i++) {
                 (arrayNodes[i]).setDelayCriticalPath(lst[i] - est[i]);
             }
+
+            nodes.stream().filter(n -> n.OnCriticalPath()).forEach(n -> n.changeBodyColor(Color.RED));
         }
     }
 
@@ -303,7 +320,7 @@ public class Graphs {
             nodes.forEach(e -> e.setNodeWeight(0.0));
             NodeGraph[] arrayNodes = (NodeGraph[]) nodes.toArray(new NodeGraph[0]);
 
-            for (int i = nodes.size() - 1; i >= 0; i++) {
+            for (int i = nodes.size() - 1; i >= 0; i--) {
                 (arrayNodes[i]).setNodeWeight(succWeight(arrayNodes[i], 1));
             }
         }
@@ -327,9 +344,9 @@ public class Graphs {
             double weight = 0;
             ListIterator iteratorSucc = node.getSuccLinksIterator();
             while (iteratorSucc.hasNext()) {
-                weight += succWeight((NodeGraph) iteratorSucc.next(), level + 1);
+                weight += succWeight(((Edge) iteratorSucc.next()).getNodeTo(), level + 1);
             }
-            return (double) (1 / node.getDuration()) * weight;
+            return weight == 0 ? (1 / (double) node.getDuration()) : (1 / (double) node.getDuration()) * weight;
         }
     }
 
