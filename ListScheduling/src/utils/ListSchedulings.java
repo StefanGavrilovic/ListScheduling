@@ -3,14 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package listscheduling;
+package utils;
 
+import gui.ExecutionUnit;
+import utils.Graphs;
 import gui.Main;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javafx.scene.paint.Color;
+import listscheduling.Edge;
+import listscheduling.NodeGraph;
 
 /**
  *
@@ -18,12 +22,16 @@ import javafx.scene.paint.Color;
  */
 public class ListSchedulings {
 
-    public static final Color PREPARE = Color.YELLOW;
-    public static final Color DATA_READY = Color.RED;
+    public static final Color PREPARE = Color.LIGHTSKYBLUE;
+    public static final Color DATA_READY = Color.BLUE;
     public static final Color EXECUTED = Color.GRAY;
+    public static final Color ON_CRITICAL_PATH = Color.ROYALBLUE;
     public static final double EXECUTING_WIDTH = Main.WINDOW_WIDTH;
     public static final double EXECUTING_HEIGHT = Main.WINDOW_HEIGHT;
 
+    /**
+     * Utility class should not have constructor.
+     */
     private ListSchedulings() {
     }
 
@@ -58,11 +66,16 @@ public class ListSchedulings {
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      * @param edges {@link List<NodeGraph>} List of the graph edges.
      */
-    public static void executeInstruction(List<NodeGraph> nodes, List<Edge> edges) {
+    public static void executeInstruction(List<NodeGraph> nodes, List<Edge> edges, ExecutionUnit eu) {
         NodeGraph node = getNodeToExecute(getDataReady(nodes));
-        Graphs.removeNode(nodes, edges, node);
-        node.changeBodyColor(EXECUTED);
-        //move
+        if (node != null) {
+            Graphs.removeNode(nodes, edges, node);
+            node.changeBodyColor(EXECUTED);
+            //move
+            eu.addFinishedToList(eu.changeEUBody(node));
+        } else {
+            Main.setAlgorithmFinished();
+        }
     }
 
 }

@@ -43,7 +43,7 @@ public class Edge extends Group {
     /**
      * Color of dependency edge type for drawing.
      */
-    public static final Color DEPEDENCY_COLOR = Color.BLUE;
+    public static final Color DEPEDENCY_COLOR = Color.YELLOW;
     /**
      * Color of anti-dependency edge type for drawing.
      */
@@ -55,7 +55,7 @@ public class Edge extends Group {
     /**
      * Color of transient edge type for drawing.
      */
-    public static final Color TRANSIENT_COLOR = Color.GREEN;
+    public static final Color TRANSIENT_COLOR = Color.LAWNGREEN;
     /**
      * Color of undetermined edge type for drawing.
      */

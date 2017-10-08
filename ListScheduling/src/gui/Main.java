@@ -7,7 +7,7 @@ package gui;
 
 import java.io.File;
 import listscheduling.Edge;
-import listscheduling.Graphs;
+import utils.Graphs;
 import listscheduling.NodeGraph;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,15 +20,20 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.SubScene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.scene.transform.Translate;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import utils.ListSchedulings;
 import listscheduling.StateMachine;
 
 /**
@@ -67,27 +72,49 @@ public class Main extends Application implements StateMachine {
     private Group graph = null;
 
     /**
-     * Stage, scene, root, etc.
+     * Main Stage, scene, root, etc.
      */
+    public static boolean algFinished = false;
     private Stage mainStage = null;
     private Group root = null;
     private Scene scene = null;
-    private MyTimer timer = new MyTimer();
+    private ExecutionUnit subRoot = null;
+    private SubScene subScene = null;
+    final private MyTimer timer = new MyTimer();
     private boolean startedTimer = false;
     private StateMachine.state currentState;
     private boolean fileLoaded = false;
 
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
+    
+    public static void setAlgorithmFinished() {
+        algFinished = true;
+    }
+    
     @Override
     public void start(Stage primaryStage) {
         mainStage = primaryStage;
         root = new Group();
+        subRoot = new ExecutionUnit(1, WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
 
         currentState = state.START;
         fileLoaded = false;
+        algFinished = false;
         makeMenu();
 
-        root.getChildren().addAll(controlBar);
+        subScene = new SubScene(subRoot, WINDOW_WIDTH, WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
+        subScene.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
+//        subScene.setFill(Color.LIGHTGRAY);
+        root.getChildren().addAll(controlBar, subScene);
         scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
+        //scene.setFill(new ImagePattern(new Image("resources/hexagon-prisms.jpg")));
+//        scene.setFill(new ImagePattern(new Image("resources/coolCubes.jpg")));
+        scene.setFill(new ImagePattern(new Image("resources/stars.jpg")));
 
         primaryStage.setTitle("List Scheduling");
         primaryStage.setScene(scene);
@@ -97,17 +124,10 @@ public class Main extends Application implements StateMachine {
         primaryStage.setHeight(WINDOW_HEIGHT);
         primaryStage.setResizable(false);
         primaryStage.show();
-        if (!startedTimer){
+        if (!startedTimer) {
             timer.start();
             startedTimer = true;
         }
-    }
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        launch(args);
     }
 
     @Override
@@ -118,35 +138,38 @@ public class Main extends Application implements StateMachine {
                 break;
             case LOAD_GRAPH:
                 showGraph();
+                subRoot.removeList();
                 break;
             case INSPECT_GRAPH:
                 nodes.forEach(n -> {
                     n.setDelayCriticalPath(-1);
-                    n.changeBodyColor(Color.YELLOW);
-                        });
+                    n.changeBodyColor(ListSchedulings.PREPARE);
+                });
                 Graphs.removeDeadCode(nodes, edges);
                 //Graphs.checkForNewDeadCode(nodes, edges);
                 Graphs.removeTransientLinks(edges);
+                subRoot.makeList(nodes.size());
                 break;
             case CRITICAL_PATH:
                 nodes.forEach(n -> {
                     n.setNodeWeight(-1.0f);
                     n.setDelayCriticalPath(-1);
-                    n.changeBodyColor(Color.YELLOW);
-                        });
+                    n.changeBodyColor(ListSchedulings.PREPARE);
+                });
                 Graphs.criticalPath(nodes);
                 break;
             case RUN_ALGORITHM:
                 Graphs.determineHeuristicWeights(nodes);
                 break;
             case EXECUTE:
+                ListSchedulings.executeInstruction(nodes, edges, subRoot);
                 break;
         }
     }
 
     @Override
     public void nextState() {
-        if (currentState != state.RUN_ALGORITHM) {
+        if (currentState != state.EXECUTE) {
             currentState = state.values()[currentState.ordinal() + 1];
         }
     }
@@ -157,7 +180,7 @@ public class Main extends Application implements StateMachine {
             currentState = state.values()[currentState.ordinal() - 1];
         }
     }
-
+    
     /**
      * Initialize application and creates all control and other parts of the
      * window of this application.
@@ -167,6 +190,8 @@ public class Main extends Application implements StateMachine {
         root = null;
         scene = null;
         graph = null;
+        subScene = null;
+        subRoot = null;
         edges.clear();
         nodes.clear();
         clearMenu();
@@ -187,7 +212,7 @@ public class Main extends Application implements StateMachine {
         nodes = Graphs.makeGraphLogic(textPath.getText());
         edges = Graphs.drawGraph(nodes, graph);
 
-        graph.setTranslateX(WINDOW_WIDTH / 2);
+        graph.setTranslateX((WINDOW_WIDTH - WINDOW_WIDTH_UTILS) / 2);
         graph.setTranslateY(WINDOW_HEIGHT / 20);
         root.getChildren().add(graph);
     }
@@ -203,6 +228,7 @@ public class Main extends Application implements StateMachine {
         textFromFile = new TextArea();
         textFromFile.setEditable(false);
         textFromFile.setText("Press load button and import program file.");
+        textFromFile.setOpacity(0.5);
 
         textFromFile.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT);
         textFromFile.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT);
@@ -212,8 +238,21 @@ public class Main extends Application implements StateMachine {
         textPath.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
         textPath.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
         textPath.setTranslateY(WINDOW_TEXT_AREA_HEIGHT);
+        textPath.setOpacity(0.5);
 
-        controlBar.getChildren().addAll(buttonBar, textFromFile, textPath);
+        //legend
+        VBox legend = new VBox(10);
+        Text headline = new Text("Legend");
+        headline.setFont(new Font(FONT_SIZE));
+        Text nodeColors = new Text("Node Colors");
+        nodeColors.setFont(new Font(FONT_SIZE));
+        Text preparedNode = new Text("LightBlue means prepared node");
+        preparedNode.setFont(new Font(FONT_SIZE));
+        preparedNode.setWrappingWidth(WINDOW_WIDTH_UTILS);
+        legend.getChildren().addAll(headline, nodeColors, preparedNode);
+        legend.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
+
+        controlBar.getChildren().addAll(buttonBar, textFromFile, textPath, legend);
         controlBar.getTransforms().add(new Translate(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE, 0));
     }
 
@@ -303,11 +342,12 @@ public class Main extends Application implements StateMachine {
         @Override
         public void handle(long now) {
             //update buttons
-            buttonNext.setDisable(!fileLoaded);
-            buttonPrev.setDisable(currentState == state.START);
+            buttonNext.setDisable(!fileLoaded || algFinished);//final state - disabled
+            buttonPrev.setDisable(currentState == state.START || currentState == state.EXECUTE);
             buttonLoad.setDisable(currentState != state.START);
             buttonReload.setDisable(!fileLoaded);
         }
 
     }
+    
 }

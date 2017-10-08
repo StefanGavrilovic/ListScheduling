@@ -3,14 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package listscheduling;
+package utils;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,7 +20,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.scene.Group;
-import javafx.scene.paint.Color;
+import listscheduling.Edge;
+import listscheduling.NodeGraph;
 
 /**
  * Utility Graphs class used for creating graph in application.
@@ -36,7 +36,7 @@ public class Graphs {
     private static final int HASH_CAP = 10;
 
     /**
-     * Utility class should not hae constructor.
+     * Utility class should not have constructor.
      */
     private Graphs() {
     }
@@ -305,7 +305,7 @@ public class Graphs {
                 (arrayNodes[i]).setDelayCriticalPath(lst[i] - est[i]);
             }
 
-            nodes.stream().filter(n -> n.OnCriticalPath()).forEach(n -> n.changeBodyColor(Color.RED));
+            nodes.stream().filter(n -> n.OnCriticalPath()).forEach(n -> n.changeBodyColor(ListSchedulings.ON_CRITICAL_PATH));
         }
     }
 

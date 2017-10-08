@@ -5,6 +5,7 @@
  */
 package listscheduling;
 
+import utils.ListSchedulings;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -65,6 +66,9 @@ public class NodeGraph extends Group{
      * Flag to mark dead code.
      */
     private boolean deadResult;
+    /**
+     * Text that shows node's weight.
+     */
     private Text textW;
     
     /**
@@ -77,7 +81,7 @@ public class NodeGraph extends Group{
      *          {@link String} instruction to be executed.
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    NodeGraph(String name, String duration, String instruction) {
+    public NodeGraph(String name, String duration, String instruction) {
         this.name = name; 
         this.ordNumber = Integer.parseInt(name.substring(2));
         this.duration = Integer.parseInt(duration);
@@ -89,7 +93,7 @@ public class NodeGraph extends Group{
         this.deadResult = false;
         
         body = new Circle(NODE_RADIUS);
-        body.setFill(Color.YELLOW);
+        body.setFill(ListSchedulings.PREPARE);
         body.setStroke(Color.BLACK);
         Text text = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT / 2, this.name);
         textW = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT * 2, String.valueOf(this.weightNode));
@@ -153,7 +157,7 @@ public class NodeGraph extends Group{
 
     public void setDeadResult(boolean deadResult) {
         this.deadResult = deadResult;
-        this.body.setFill(Color.LIGHTGRAY);
+        this.body.setFill(ListSchedulings.PREPARE);
     }
 
     public void addPredLink(NodeGraph nodeFrom, NodeGraph nodeTo) {
