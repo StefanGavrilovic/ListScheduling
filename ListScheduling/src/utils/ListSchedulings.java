@@ -43,8 +43,7 @@ public class ListSchedulings {
      * @return {@link List<NodeGraph>} List of the Data Ready nodes.
      */
     public static List<NodeGraph> getDataReady(List<NodeGraph> nodes) {
-        return Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0]))
-                .filter(n -> n.isEmptyPredLinksList()).collect(Collectors.toList());
+        return nodes.stream().filter(n -> n.isEmptyPredLinksList() && !n.isFinished()).collect(Collectors.toList());
     }
 
     /**
@@ -55,9 +54,10 @@ public class ListSchedulings {
      * @return {@link NodeGraph} Chosen node from Data Ready list.
      */
     public static NodeGraph getNodeToExecute(List<NodeGraph> nodes) {
-        Optional<NodeGraph> a = Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0]))
-                .max((NodeGraph n1, NodeGraph n2) -> (int)(n1.getNodeWeight() - n2.getNodeWeight()));
-        return a.isPresent() ? a.get() : null;
+        NodeGraph nodeCP = nodes.stream().filter(node -> node.OnCriticalPath()).findFirst().orElse(null);
+        NodeGraph nodeW = nodes.stream()
+                .max((NodeGraph n1, NodeGraph n2) -> (int)(n1.getNodeWeight() - n2.getNodeWeight())).orElse(null);
+        return nodeCP != null ? nodeCP : nodeW;
     }
 
     /**
@@ -65,6 +65,7 @@ public class ListSchedulings {
      *
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      * @param edges {@link List<NodeGraph>} List of the graph edges.
+     * @param eu {@link ExecutionUnit} Execution unit that acts as CPU for instructions.
      */
     public static void executeInstruction(List<NodeGraph> nodes, List<Edge> edges, ExecutionUnit eu) {
         NodeGraph node = getNodeToExecute(getDataReady(nodes));

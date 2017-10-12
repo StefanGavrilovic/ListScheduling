@@ -248,7 +248,7 @@ public class Graphs {
      */
     public static void removeNode(List<NodeGraph> nodes, List<Edge> edges, NodeGraph deadNode) {
         Optional.ofNullable(deadNode).ifPresent(node -> {
-            nodes.stream().filter(test -> !test.isDeadResult()).forEach(n -> {
+            nodes.stream().filter(test -> !test.isDeadResult() || !test.isFinished()).forEach(n -> {
                 node.setVisible(false);
                 n.removePredLink(node);
                 n.removeSuccLink(node);
@@ -260,6 +260,7 @@ public class Graphs {
                     edges.remove(e);
                     e.setVisible(false);
                 });
+                node.setFinished(true);
             });
         });
     }

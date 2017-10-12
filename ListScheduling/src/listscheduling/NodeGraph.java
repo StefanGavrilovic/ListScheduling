@@ -67,6 +67,10 @@ public class NodeGraph extends Group{
      */
     private boolean deadResult;
     /**
+     * Flag to mark executed node.
+     */
+    private boolean finished;
+    /**
      * Text that shows node's weight.
      */
     private Text textW;
@@ -91,6 +95,7 @@ public class NodeGraph extends Group{
         this.delayCriticalPath = -1;
         this.weightNode = -1.0;
         this.deadResult = false;
+        this.finished = false;
         
         body = new Circle(NODE_RADIUS);
         body.setFill(ListSchedulings.PREPARE);
@@ -160,6 +165,14 @@ public class NodeGraph extends Group{
         this.body.setFill(ListSchedulings.PREPARE);
     }
 
+    public boolean isFinished() {
+        return finished;
+    }
+    
+    public void setFinished(boolean finished) {
+        this.finished = finished;
+    }
+    
     public void addPredLink(NodeGraph nodeFrom, NodeGraph nodeTo) {
         predLinks.add(new Edge(nodeFrom, nodeTo, Edge.TYPE_UNDETERMINED));
     }

@@ -342,9 +342,9 @@ public class Main extends Application implements StateMachine {
         @Override
         public void handle(long now) {
             //update buttons
-            buttonNext.setDisable(!fileLoaded || algFinished);//final state - disabled
+            buttonNext.setDisable(!fileLoaded || algFinished);
             buttonPrev.setDisable(currentState == state.START || currentState == state.EXECUTE);
-            buttonLoad.setDisable(currentState != state.START);
+            buttonLoad.setDisable(currentState != state.START && !algFinished);
             buttonReload.setDisable(!fileLoaded);
         }
 
