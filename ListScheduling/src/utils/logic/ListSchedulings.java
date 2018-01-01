@@ -3,18 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utils;
+package utils.logic;
 
 import gui.ExecutionUnit;
-import utils.Graphs;
 import gui.Main;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import javafx.scene.Group;
 import javafx.scene.paint.Color;
-import listscheduling.Edge;
-import listscheduling.NodeGraph;
+import logic.Edge;
+import logic.NodeGraph;
 
 /**
  *
@@ -56,7 +57,7 @@ public class ListSchedulings {
     public static NodeGraph getNodeToExecute(List<NodeGraph> nodes) {
         NodeGraph nodeCP = nodes.stream().filter(node -> node.OnCriticalPath()).findFirst().orElse(null);
         NodeGraph nodeW = nodes.stream()
-                .max((NodeGraph n1, NodeGraph n2) -> (int)(n1.getNodeWeight() - n2.getNodeWeight())).orElse(null);
+                .max((NodeGraph n1, NodeGraph n2) -> (int) (n1.getNodeWeight() - n2.getNodeWeight())).orElse(null);
         return nodeCP != null ? nodeCP : nodeW;
     }
 
@@ -65,18 +66,31 @@ public class ListSchedulings {
      *
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      * @param edges {@link List<NodeGraph>} List of the graph edges.
-     * @param eu {@link ExecutionUnit} Execution unit that acts as CPU for instructions.
+     * @param eu {@link ExecutionUnit} Execution unit that acts as CPU for
+     * instructions.
      */
     public static void executeInstruction(List<NodeGraph> nodes, List<Edge> edges, ExecutionUnit eu) {
-        NodeGraph node = getNodeToExecute(getDataReady(nodes));
-        if (node != null) {
-            Graphs.removeNode(nodes, edges, node);
-            node.changeBodyColor(EXECUTED);
+        List<Group> nodesToExe = new ArrayList<>();
+        IntStream.range(0, eu.getNumOfCores()).forEach(i -> {
+            final NodeGraph tmp = getNodeToExecute(getDataReady(nodes));
+            Optional.ofNullable(tmp).ifPresent(t -> {
+                nodesToExe.add(t);
+                Graphs.removeNode(nodes, edges, t);
+                t.changeBodyColor(EXECUTED);
+            });
+        });
+        if (nodesToExe.size() > 0) {
             //move
-            eu.addFinishedToList(eu.changeEUBody(node));
+            eu.addFinishedToList(eu.changeEUBody(nodesToExe));
         } else {
             Main.setAlgorithmFinished();
         }
     }
 
+    public final static String legendNodeGraph() {
+        return String.join("\n\n", "PREPARE - LIGHTSKYBLUE",
+                "DATA READY - BLUE",
+                "EXECUTED - GRAY",
+                "ON CRITICAL PATH - ROYALBLUE");
+    }
 }

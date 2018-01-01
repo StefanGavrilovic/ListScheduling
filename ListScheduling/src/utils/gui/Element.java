@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utils;
+package utils.gui;
 
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
@@ -16,12 +16,12 @@ import javafx.scene.shape.Rectangle;
  *
  * @author zer0
  */
-public class GUIObjects {
+public class Element {
 
     /**
      * Utility class should not have constructor.
      */
-    private GUIObjects() {
+    private Element() {
     }
 
     /**

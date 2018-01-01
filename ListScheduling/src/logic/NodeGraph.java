@@ -3,9 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package listscheduling;
+package logic;
 
-import utils.ListSchedulings;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import utils.logic.ListSchedulings;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -100,8 +102,10 @@ public class NodeGraph extends Group{
         body = new Circle(NODE_RADIUS);
         body.setFill(ListSchedulings.PREPARE);
         body.setStroke(Color.BLACK);
+        
+        final NumberFormat formatter = new DecimalFormat("#0.000");
         Text text = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT / 2, this.name);
-        textW = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT * 2, String.valueOf(this.weightNode));
+        textW = new Text(-(TEXT_WIDTH) - TEXT_SIZE * 2.5, TEXT_HEIGHT * 2, formatter.format(this.weightNode));
 
         this.getChildren().addAll(body, text, textW);
         this.setVisible(false);
@@ -149,7 +153,8 @@ public class NodeGraph extends Group{
     
     public void setNodeWeight(double weight) {
         this.weightNode = weight;
-        this.textW.setText(String.valueOf(weight));
+        final NumberFormat formatter = new DecimalFormat("#0.000");
+        this.textW.setText(formatter.format(weight));
     }
     
     public double getNodeWeight() {
@@ -255,7 +260,8 @@ public class NodeGraph extends Group{
     }
     
     public void refreshWeights(double weight) {
-        this.textW.setText(String.valueOf(weight));
+        final NumberFormat formatter = new DecimalFormat("#0.000");
+        this.textW.setText(formatter.format(weight));
     }
     
 }

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package listscheduling;
+package logic;
 
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
@@ -250,4 +250,11 @@ public class Edge extends Group {
         }
     }
     
+    public final static String legendEdge() {
+        return String.join("\n\n", "DEPEDENCY - YELLOW",
+                "ANTI DEPENDENCY - RED",
+                "OUTGOING DEPENDENCY - ORANGE",
+                "TRANSIENT - LAWNGREEN",
+                "TYPE UNDETERMINED - BLACK");
+    }
 }

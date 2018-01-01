@@ -6,35 +6,37 @@
 package gui;
 
 import java.io.File;
-import listscheduling.Edge;
-import utils.Graphs;
-import listscheduling.NodeGraph;
+import logic.Edge;
+import utils.logic.Graphs;
+import logic.NodeGraph;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.SubScene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.ImagePattern;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.scene.transform.Translate;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import utils.ListSchedulings;
-import listscheduling.StateMachine;
+import utils.logic.ListSchedulings;
+import logic.StateMachine;
 
 /**
  *
@@ -63,6 +65,9 @@ public class Main extends Application implements StateMachine {
     private Group controlBar;
     private Group buttonBar;
     private Group execution;
+    private Label legHeader;
+    private TextArea legBody;
+    private ComboBox test;
 
     /**
      * Graph.
@@ -91,16 +96,21 @@ public class Main extends Application implements StateMachine {
     public static void main(String[] args) {
         launch(args);
     }
-    
+
     public static void setAlgorithmFinished() {
         algFinished = true;
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Execution Finished");
+        a.setHeaderText("Simulation has finished");
+        a.setContentText("Please reload current program or load another program and start algorithm.");
+        a.showAndWait();
     }
-    
+
     @Override
     public void start(Stage primaryStage) {
         mainStage = primaryStage;
         root = new Group();
-        subRoot = new ExecutionUnit(1, WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
+        subRoot = new ExecutionUnit(2, WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
 
         currentState = state.START;
         fileLoaded = false;
@@ -109,12 +119,12 @@ public class Main extends Application implements StateMachine {
 
         subScene = new SubScene(subRoot, WINDOW_WIDTH, WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
         subScene.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
-//        subScene.setFill(Color.LIGHTGRAY);
+        //subScene.setFill(Color.LIGHTGRAY);
         root.getChildren().addAll(controlBar, subScene);
         scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
         //scene.setFill(new ImagePattern(new Image("resources/hexagon-prisms.jpg")));
 //        scene.setFill(new ImagePattern(new Image("resources/coolCubes.jpg")));
-        scene.setFill(new ImagePattern(new Image("resources/stars.jpg")));
+        //scene.setFill(new ImagePattern(new Image("resources/stars.jpg")));
 
         primaryStage.setTitle("List Scheduling");
         primaryStage.setScene(scene);
@@ -134,7 +144,7 @@ public class Main extends Application implements StateMachine {
     public void execute() {
         switch (currentState) {
             case START:
-                initApplication();
+                initApplication(false);
                 break;
             case LOAD_GRAPH:
                 showGraph();
@@ -180,22 +190,24 @@ public class Main extends Application implements StateMachine {
             currentState = state.values()[currentState.ordinal() - 1];
         }
     }
-    
+
     /**
      * Initialize application and creates all control and other parts of the
      * window of this application.
      */
-    private void initApplication() {
-        mainStage.close();
+    private void initApplication(final boolean complete) {
+        if (complete) {
+            mainStage.close();
+        }
         root = null;
         scene = null;
         graph = null;
         subScene = null;
         subRoot = null;
-        edges.clear();
-        nodes.clear();
+        Optional.ofNullable(edges).ifPresent(e -> e.clear());
+        Optional.ofNullable(nodes).ifPresent(n -> n.clear());
         clearMenu();
-        start(new Stage());
+        start(complete ? new Stage() : mainStage);
     }
 
     /**
@@ -226,6 +238,7 @@ public class Main extends Application implements StateMachine {
         makeButtonBar();
 
         textFromFile = new TextArea();
+        textFromFile.setWrapText(true);
         textFromFile.setEditable(false);
         textFromFile.setText("Press load button and import program file.");
         textFromFile.setOpacity(0.5);
@@ -241,18 +254,32 @@ public class Main extends Application implements StateMachine {
         textPath.setOpacity(0.5);
 
         //legend
-        VBox legend = new VBox(10);
-        Text headline = new Text("Legend");
+        Label headline = new Label("LEGEND");
+        headline.setAlignment(Pos.CENTER);
+        headline.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 3);
+        headline.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
+        headline.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
         headline.setFont(new Font(FONT_SIZE));
-        Text nodeColors = new Text("Node Colors");
-        nodeColors.setFont(new Font(FONT_SIZE));
-        Text preparedNode = new Text("LightBlue means prepared node");
-        preparedNode.setFont(new Font(FONT_SIZE));
-        preparedNode.setWrappingWidth(WINDOW_WIDTH_UTILS);
-        legend.getChildren().addAll(headline, nodeColors, preparedNode);
-        legend.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
 
-        controlBar.getChildren().addAll(buttonBar, textFromFile, textPath, legend);
+        test = new ComboBox(FXCollections.observableArrayList(
+                "Node Color",
+                "Edge Color"
+        ));
+        test.setOnAction(event -> legBody.setText(((String) test.getValue()).equals("Node Color")
+                ? ListSchedulings.legendNodeGraph() : Edge.legendEdge()));
+        test.setValue("Node Color");
+        test.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
+        test.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
+        test.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 4);
+
+        legBody = new TextArea(ListSchedulings.legendNodeGraph());
+        legBody.setWrapText(true);
+        legBody.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 5);
+        legBody.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT - legBody.getTranslateY());
+        legBody.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT - legBody.getTranslateY());
+        legBody.setEditable(false);
+        
+        controlBar.getChildren().addAll(buttonBar, textFromFile, textPath, headline, test, legBody);
         controlBar.getTransforms().add(new Translate(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE, 0));
     }
 
@@ -302,15 +329,18 @@ public class Main extends Application implements StateMachine {
             fileImport.setTitle("Open Program File");
             fileImport.setInitialDirectory(Paths.get(System.getProperty("user.dir")).toFile());
             File txtFile = fileImport.showOpenDialog(mainStage);
-            try {
-                textFromFile.setText(new String(Files.readAllBytes(txtFile.toPath())));
-                textPath.setText(txtFile.getPath());
-                fileLoaded = true;
-            } catch (IOException ex) {
-                textFromFile.setText("File not found. Load again.");
-                fileLoaded = false;
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            Optional.ofNullable(txtFile).ifPresent(file -> {
+                try {
+                    initApplication(false);
+                    textFromFile.setText(new String(Files.readAllBytes(file.toPath())));
+                    textPath.setText(txtFile.getPath());
+                    fileLoaded = true;
+                } catch (IOException ex) {
+                    textFromFile.setText("File not found. Load again.");
+                    fileLoaded = false;
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
         });
 
         buttonReload = createButton("Reload", WINDOW_WIDTH_BUTTON,
@@ -318,7 +348,7 @@ public class Main extends Application implements StateMachine {
         buttonReload.setOnMouseClicked((event) -> {
             String file = textFromFile.getText();
             String pathFile = textPath.getText();
-            initApplication();
+            initApplication(true);
             textFromFile.setText(file);
             textPath.setText(pathFile);
             fileLoaded = true;
@@ -349,5 +379,5 @@ public class Main extends Application implements StateMachine {
         }
 
     }
-    
+
 }

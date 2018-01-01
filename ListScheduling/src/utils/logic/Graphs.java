@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utils;
+package utils.logic;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -20,8 +20,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.scene.Group;
-import listscheduling.Edge;
-import listscheduling.NodeGraph;
+import logic.Edge;
+import logic.NodeGraph;
 
 /**
  * Utility Graphs class used for creating graph in application.
