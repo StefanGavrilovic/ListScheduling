@@ -12,8 +12,6 @@ import java.util.stream.IntStream;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 import logic.NodeGraph;
@@ -132,8 +130,9 @@ public class ExecutionUnit extends Group {
      */
     private Group makeExecutionUnit(final int numOfCores) {
         final Group group = new Group();
-        final double dist = this.cpu_height / (numOfCores + 1);
-
+        final double dist = this.cpu_height / (numOfCores + 1) < NodeGraph.NODE_RADIUS * 2
+                ? NodeGraph.NODE_RADIUS * 2.1 : this.cpu_height / (numOfCores + 1);
+        
         final Stop[] stops = new Stop[]{new Stop(0.0, Color.DARKBLUE), new Stop(1.0, Color.LIGHTBLUE)};
         final Rectangle box = Element.createRectangle(CPU_WIDTH, this.cpu_height, Color.WHITE);
         //new RadialGradient(0, 0, CPU_WIDTH / 2, this.cpu_height / 2, NodeGraph.NODE_RADIUS * 2, false, CycleMethod.REFLECT, stops));
