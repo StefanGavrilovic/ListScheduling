@@ -65,9 +65,9 @@ public class Main extends Application implements StateMachine {
     private Group controlBar;
     private Group buttonBar;
     private Group execution;
-    private Label legHeader;
+    private ComboBox setCores;
     private TextArea legBody;
-    private ComboBox test;
+    private ComboBox setLegend;
 
     /**
      * Graph.
@@ -83,7 +83,7 @@ public class Main extends Application implements StateMachine {
     private Stage mainStage = null;
     private Group root = null;
     private Scene scene = null;
-    private ExecutionUnit subRoot = null;
+    private ExecutionUnit subEURoot = null;
     private SubScene subScene = null;
     final private MyTimer timer = new MyTimer();
     private boolean startedTimer = false;
@@ -109,15 +109,16 @@ public class Main extends Application implements StateMachine {
     @Override
     public void start(Stage primaryStage) {
         mainStage = primaryStage;
-        root = new Group();
-        subRoot = new ExecutionUnit(2, WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
-
         currentState = state.START;
         fileLoaded = false;
         algFinished = false;
-        makeMenu();
 
-        subScene = new SubScene(subRoot, WINDOW_WIDTH, WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
+        root = new Group();
+        makeMenu();
+        subEURoot = new ExecutionUnit(Integer.parseInt(((String) setCores.getValue()).split(" ")[0]),
+                WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
+
+        subScene = new SubScene(subEURoot, WINDOW_WIDTH - WINDOW_WIDTH_UTILS, WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
         subScene.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
         //subScene.setFill(Color.LIGHTGRAY);
         root.getChildren().addAll(controlBar, subScene);
@@ -148,7 +149,7 @@ public class Main extends Application implements StateMachine {
                 break;
             case LOAD_GRAPH:
                 showGraph();
-                subRoot.removeList();
+                subEURoot.removeList();
                 break;
             case INSPECT_GRAPH:
                 nodes.forEach(n -> {
@@ -158,7 +159,7 @@ public class Main extends Application implements StateMachine {
                 Graphs.removeDeadCode(nodes, edges);
                 //Graphs.checkForNewDeadCode(nodes, edges);
                 Graphs.removeTransientLinks(edges);
-                subRoot.makeList(nodes.size());
+                subEURoot.makeList(nodes.size());
                 break;
             case CRITICAL_PATH:
                 nodes.forEach(n -> {
@@ -172,7 +173,7 @@ public class Main extends Application implements StateMachine {
                 Graphs.determineHeuristicWeights(nodes);
                 break;
             case EXECUTE:
-                ListSchedulings.executeInstruction(nodes, edges, subRoot);
+                ListSchedulings.executeInstruction(nodes, edges, subEURoot);
                 break;
         }
     }
@@ -203,7 +204,7 @@ public class Main extends Application implements StateMachine {
         scene = null;
         graph = null;
         subScene = null;
-        subRoot = null;
+        subEURoot = null;
         Optional.ofNullable(edges).ifPresent(e -> e.clear());
         Optional.ofNullable(nodes).ifPresent(n -> n.clear());
         clearMenu();
@@ -235,8 +236,8 @@ public class Main extends Application implements StateMachine {
      */
     private void makeMenu() {
         controlBar = new Group();
-        makeButtonBar();
 
+        //control input
         textFromFile = new TextArea();
         textFromFile.setWrapText(true);
         textFromFile.setEditable(false);
@@ -253,33 +254,51 @@ public class Main extends Application implements StateMachine {
         textPath.setTranslateY(WINDOW_TEXT_AREA_HEIGHT);
         textPath.setOpacity(0.5);
 
+        makeButtonBar();
+
+        //control core
+        setCores = new ComboBox(FXCollections.observableArrayList(
+                "1 Core",
+                "2 Cores",
+                "4 Cores"
+        ));
+        setCores.setValue("1 Core");
+        setCores.setOnAction(event -> {
+            Optional.ofNullable(subEURoot)
+                    .ifPresent(s -> Optional.ofNullable(setCores.getValue())
+                            .ifPresent(val -> s.reRender(Integer.parseInt(((String) val).split(" ")[0]))));
+        });
+        setCores.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
+        setCores.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
+        setCores.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 3);
+
         //legend
         Label headline = new Label("LEGEND");
         headline.setAlignment(Pos.CENTER);
-        headline.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 3);
+        headline.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 4);
         headline.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
         headline.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
         headline.setFont(new Font(FONT_SIZE));
 
-        test = new ComboBox(FXCollections.observableArrayList(
+        setLegend = new ComboBox(FXCollections.observableArrayList(
                 "Node Color",
                 "Edge Color"
         ));
-        test.setOnAction(event -> legBody.setText(((String) test.getValue()).equals("Node Color")
+        setLegend.setOnAction(event -> legBody.setText(((String) setLegend.getValue()).equals("Node Color")
                 ? ListSchedulings.legendNodeGraph() : Edge.legendEdge()));
-        test.setValue("Node Color");
-        test.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
-        test.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
-        test.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 4);
+        setLegend.setValue("Node Color");
+        setLegend.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
+        setLegend.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT_BUTTON);
+        setLegend.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 5);
 
         legBody = new TextArea(ListSchedulings.legendNodeGraph());
         legBody.setWrapText(true);
-        legBody.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 5);
+        legBody.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + WINDOW_HEIGHT_BUTTON * 6);
         legBody.setMinSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT - legBody.getTranslateY());
         legBody.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_HEIGHT - legBody.getTranslateY());
         legBody.setEditable(false);
-        
-        controlBar.getChildren().addAll(buttonBar, textFromFile, textPath, headline, test, legBody);
+
+        controlBar.getChildren().addAll(buttonBar, textFromFile, textPath, setCores, headline, setLegend, legBody);
         controlBar.getTransforms().add(new Translate(WINDOW_WIDTH - WINDOW_WIDTH_UTILS - WINDOW_TOLERANCE, 0));
     }
 
@@ -331,7 +350,10 @@ public class Main extends Application implements StateMachine {
             File txtFile = fileImport.showOpenDialog(mainStage);
             Optional.ofNullable(txtFile).ifPresent(file -> {
                 try {
+                    String tmpCoreNum = (String) setCores.getValue();
                     initApplication(false);
+                    setCores.setValue(tmpCoreNum);
+                    subEURoot.reRender(Integer.parseInt(tmpCoreNum.split(" ")[0]));
                     textFromFile.setText(new String(Files.readAllBytes(file.toPath())));
                     textPath.setText(txtFile.getPath());
                     fileLoaded = true;
@@ -376,6 +398,7 @@ public class Main extends Application implements StateMachine {
             buttonPrev.setDisable(currentState == state.START || currentState == state.EXECUTE);
             buttonLoad.setDisable(currentState != state.START && !algFinished);
             buttonReload.setDisable(!fileLoaded);
+            setCores.setDisable(currentState != state.START);
         }
 
     }

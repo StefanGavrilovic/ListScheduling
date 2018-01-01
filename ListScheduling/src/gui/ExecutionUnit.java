@@ -7,6 +7,7 @@ package gui;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -39,7 +40,7 @@ public class ExecutionUnit extends Group {
     /**
      * Graphical representation of CPU.
      */
-    private final Group processingUnit;
+    private Group processingUnit;
     /**
      * List of the cores and corresponding list of positions for executed
      * instructions.
@@ -55,13 +56,7 @@ public class ExecutionUnit extends Group {
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public ExecutionUnit(final int numOfCores, final double height) {
         this.cpu_height = height;
-        this.cores = new LinkedList<>();
-        processingUnit = makeExecutionUnit(numOfCores);
-
-        final Label label = new Label("Execution Unit");
-        label.setLabelFor(processingUnit);
-
-        this.getChildren().addAll(processingUnit, label);
+        reRender(numOfCores);
     }
 
     /**
@@ -94,7 +89,8 @@ public class ExecutionUnit extends Group {
     /**
      * This method is used to change currently executed instruction.
      *
-     * @param nextNodes {@link List} < {@link Group} > Instructions that are ready for execution.
+     * @param nextNodes {@link List} < {@link Group} > Instructions that are
+     * ready for execution.
      *
      * @return {@link Group} Returns executed instruction.
      */
@@ -104,14 +100,27 @@ public class ExecutionUnit extends Group {
         cores.forEach(c -> processingUnit.getChildren().add(c.getCore()));
         return oldNodes;
     }
-    
+
     /**
      * Returns number of cores for this execution unit.
-     * 
+     *
      * @return {@link Integer} Number of cores.
      */
     public int getNumOfCores() {
         return cores.size();
+    }
+
+    public void reRender(final int numOfCores) {
+        this.getChildren().clear();
+        Optional.ofNullable(this.cores).ifPresent(c -> c.clear());
+        processingUnit = null;
+        
+        this.cores = new LinkedList<>();
+        processingUnit = makeExecutionUnit(numOfCores);
+        final Label label = new Label("Execution Unit");
+        label.setLabelFor(processingUnit);
+
+        this.getChildren().addAll(processingUnit, label);
     }
 
     /**
@@ -127,10 +136,10 @@ public class ExecutionUnit extends Group {
 
         final Stop[] stops = new Stop[]{new Stop(0.0, Color.DARKBLUE), new Stop(1.0, Color.LIGHTBLUE)};
         final Rectangle box = Element.createRectangle(CPU_WIDTH, this.cpu_height, Color.WHITE);
-                //new RadialGradient(0, 0, CPU_WIDTH / 2, this.cpu_height / 2, NodeGraph.NODE_RADIUS * 2, false, CycleMethod.REFLECT, stops));
+        //new RadialGradient(0, 0, CPU_WIDTH / 2, this.cpu_height / 2, NodeGraph.NODE_RADIUS * 2, false, CycleMethod.REFLECT, stops));
 
         IntStream.range(0, numOfCores).forEach(i -> this.cores.add(new ExecutionCore((i + 1) * dist)));
-        
+
         group.getChildren().addAll(box);
         group.getChildren().addAll(cores);
         return group;
