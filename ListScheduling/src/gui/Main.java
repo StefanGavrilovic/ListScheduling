@@ -266,7 +266,8 @@ public class Main extends Application implements StateMachine {
         edges = Graphs.drawGraph(nodes, graph);
 
         graph.setTranslateX(WINDOW_WIDTH / 40);
-        graph.setTranslateY(WINDOW_HEIGHT / 20);
+        //graph.setTranslateY(WINDOW_HEIGHT / 20);
+        graph.setTranslateY(0);
         root.getChildren().add(subSceneGraph);
     }
 
