@@ -282,7 +282,10 @@ public class Main extends Application implements StateMachine {
         textFromFile = new TextArea();
         textFromFile.setWrapText(true);
         textFromFile.setEditable(false);
-        textFromFile.setText("Press load button and import program file.");
+        textFromFile.setText("Press load button and import program file.\n\n" +
+                "Instruction format:\n OPi duration RES=XopY\n\n" +
+                "Example: OP1 1 A=B+C\n\n" +
+                "Hint: Currently all types of operations(+,-,/,*) have same duration (1 cycle)");
         textFromFile.setOpacity(0.5);
 
         textFromFile.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT);
