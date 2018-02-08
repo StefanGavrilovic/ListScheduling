@@ -55,8 +55,8 @@ public class ListSchedulings {
      * @return {@link NodeGraph} Chosen node from Data Ready list.
      */
     public static NodeGraph getNodeToExecute(List<NodeGraph> nodes) {
-        NodeGraph nodeCP = nodes.stream().filter(node -> node.OnCriticalPath()).findFirst().orElse(null);
-        NodeGraph nodeW = nodes.stream()
+        NodeGraph nodeCP = nodes.stream().filter(n -> !n.isChosen()).filter(node -> node.OnCriticalPath()).findFirst().orElse(null);
+        NodeGraph nodeW = nodes.stream().filter(n -> !n.isChosen())
                 .max((NodeGraph n1, NodeGraph n2) -> (int) (n1.getNodeWeight() - n2.getNodeWeight())).orElse(null);
         return nodeCP != null ? nodeCP : nodeW;
     }
@@ -75,10 +75,11 @@ public class ListSchedulings {
             final NodeGraph tmp = getNodeToExecute(getDataReady(nodes));
             Optional.ofNullable(tmp).ifPresent(t -> {
                 nodesToExe.add(t);
-                Graphs.removeNode(nodes, edges, t);
+                t.setChosen(true);
                 t.changeBodyColor(EXECUTED);
             });
         });
+        nodesToExe.forEach(t -> Graphs.removeNode(nodes, edges, (NodeGraph)t));
         if (nodesToExe.size() > 0) {
             //move
             eu.addFinishedToList(eu.changeEUBody(nodesToExe));

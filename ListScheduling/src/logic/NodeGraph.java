@@ -73,6 +73,10 @@ public class NodeGraph extends Group{
      */
     private boolean finished;
     /**
+     * Flag to mark node chosen for execution.
+     */
+    private boolean chosen;
+    /**
      * Text that shows node's weight.
      */
     private Text textW;
@@ -98,6 +102,7 @@ public class NodeGraph extends Group{
         this.weightNode = -1.0;
         this.deadResult = false;
         this.finished = false;
+        this.chosen = false;
         
         body = new Circle(NODE_RADIUS);
         body.setFill(ListSchedulings.PREPARE);
@@ -262,6 +267,14 @@ public class NodeGraph extends Group{
     public void refreshWeights(double weight) {
         final NumberFormat formatter = new DecimalFormat("#0.000");
         this.textW.setText(formatter.format(weight));
+    }
+
+    public boolean isChosen() {
+        return chosen;
+    }
+
+    public void setChosen(boolean chosen) {
+        this.chosen = chosen;
     }
     
 }
