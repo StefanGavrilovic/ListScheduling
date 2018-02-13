@@ -12,7 +12,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
+import java.util.stream.Stream;
 import javafx.scene.Group;
+import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
@@ -77,9 +79,17 @@ public class NodeGraph extends Group{
      */
     private boolean chosen;
     /**
+     * Text that shows node's name.
+     */
+    private Text text;
+    /**
      * Text that shows node's weight.
      */
     private Text textW;
+    /**
+     * Node's tooltip.
+     */
+    private Tooltip tooltip;
     
     /**
      * The constructor of Node in Graph.
@@ -109,9 +119,19 @@ public class NodeGraph extends Group{
         body.setStroke(Color.BLACK);
         
         final NumberFormat formatter = new DecimalFormat("#0.000");
-        Text text = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT / 2, this.name);
+        text = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT / 2, this.name);
         textW = new Text(-(TEXT_WIDTH) - TEXT_SIZE * 2.5, TEXT_HEIGHT * 2, formatter.format(this.weightNode));
 
+        tooltip = new Tooltip();
+        
+        this.setOnMouseEntered(event -> {
+            this.getTooltip().setText(this.getInstruction().toString());
+            Tooltip.install(body, tooltip);
+        });
+        this.setOnMouseExited(event -> {
+            Tooltip.uninstall(body, tooltip);
+        });
+        
         this.getChildren().addAll(body, text, textW);
         this.setVisible(false);
     }
@@ -245,6 +265,10 @@ public class NodeGraph extends Group{
         return succLinks.listIterator();
     }
     
+    public Stream<Edge> getSuccLinksAsStream() {
+        return succLinks.stream();
+    }
+    
     public Edge findSuccLink(NodeGraph linkNode) {
         ListIterator<Edge> iterator = getSuccLinksIterator();
         while (iterator.hasNext()) {
@@ -275,6 +299,38 @@ public class NodeGraph extends Group{
 
     public void setChosen(boolean chosen) {
         this.chosen = chosen;
+    }
+
+    public double getWeightNode() {
+        return weightNode;
+    }
+
+    public void setWeightNode(double weightNode) {
+        this.weightNode = weightNode;
+    }
+
+    public Text getText() {
+        return text;
+    }
+
+    public void setText(Text text) {
+        this.text = text;
+    }
+
+    public Text getTextW() {
+        return textW;
+    }
+
+    public void setTextW(Text textW) {
+        this.textW = textW;
+    }
+
+    public Tooltip getTooltip() {
+        return tooltip;
+    }
+
+    public void setTooltip(Tooltip tooltip) {
+        this.tooltip = tooltip;
     }
     
 }

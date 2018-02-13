@@ -181,6 +181,7 @@ public class Main extends Application implements StateMachine {
                 Graphs.removeDeadCode(nodes, edges);
                 //Graphs.checkForNewDeadCode(nodes, edges);
                 Graphs.removeTransientLinks(edges);
+                Graphs.removeOutgoingDependencyLinks(edges);
                 execUnitRoot.makeList(nodes.size());
                 graphLabel.setText("Graph Representation - Inspect Graph");
                 break;
@@ -281,7 +282,7 @@ public class Main extends Application implements StateMachine {
         //control input
         textFromFile = new TextArea();
         textFromFile.setWrapText(true);
-        textFromFile.setEditable(false);
+        textFromFile.setEditable(true);
         textFromFile.setText("Press load button and import program file.\n\n" +
                 "Instruction format:\n OPi duration RES=XopY\n\n" +
                 "Example: OP1 1 A=B+C\n\n" +

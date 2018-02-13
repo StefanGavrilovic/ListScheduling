@@ -83,6 +83,9 @@ public class Graphs {
                     if (deadCode) {
                         nodeRes.setDeadResult(true);
                         hashMap.remove(nodeRes.getInstruction().getResult());
+                    } else {
+                        nodeRes.addSuccLink(nodeRes, node, Edge.OUTGOING_DEPENDENCY);
+                        node.addPredLink(nodeRes, node, Edge.OUTGOING_DEPENDENCY);
                     }
                 }
                 //RW
@@ -120,6 +123,7 @@ public class Graphs {
                         n.addSuccLink(n, node, Edge.DEPENDENCY);
                     }
                 }
+                //WR
 
                 hashMap.put(node.getInstruction().getResult(), node);
             }
@@ -208,6 +212,29 @@ public class Graphs {
         edges.stream().filter(e -> e.compareLinkType(Edge.TRANSIENT)).forEach(e -> {
             e.getNodeFrom().removeSuccLink(e);
             e.getNodeTo().removePredLink(e);
+        });
+        edges.removeAll(edges.stream().filter(e -> e.compareLinkType(Edge.TRANSIENT)).collect(Collectors.toList()));
+    }
+
+    /**
+     * This method is used to delete outgoing dependency edges from the graph.
+     *
+     * @param edges {@link List<Edge>} List of the graph edges.
+     */
+    public static void removeOutgoingDependencyLinks(List<Edge> edges) {
+        edges.stream().filter(e -> e.compareLinkType(Edge.OUTGOING_DEPENDENCY)).forEach(e -> {
+            e.getNodeFrom().removeSuccLink(e);
+            e.getNodeTo().removePredLink(e);
+            final String renameRes = e.getNodeTo().getInstruction().getResult();
+            e.getNodeTo().getSuccLinksAsStream().filter(edge -> edge.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes) ||
+                    edge.getNodeTo().getInstruction().getB().equalsIgnoreCase(renameRes)).forEach(edgeRename -> {
+                        if (edgeRename.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)){
+                            edgeRename.getNodeTo().getInstruction().setA(renameRes + 1);
+                        } else {
+                            edgeRename.getNodeTo().getInstruction().setB(renameRes + 1);
+                        }
+                    });
+            e.getNodeTo().getInstruction().setResult(renameRes + 1);
         });
         edges.removeAll(edges.stream().filter(e -> e.compareLinkType(Edge.TRANSIENT)).collect(Collectors.toList()));
     }
