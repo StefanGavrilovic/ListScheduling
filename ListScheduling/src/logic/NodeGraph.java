@@ -238,6 +238,10 @@ public class NodeGraph extends Group{
         return predLinks.listIterator();
     }
     
+    public Stream<Edge> getPredLinksAsStream() {
+        return predLinks.stream();
+    }
+    
     public void addSuccLink(NodeGraph nodeFrom, NodeGraph nodeTo) {
         succLinks.add(new Edge(nodeFrom, nodeTo, Edge.TYPE_UNDETERMINED));
     }

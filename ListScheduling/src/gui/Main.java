@@ -12,6 +12,7 @@ import logic.NodeGraph;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -138,13 +139,9 @@ public class Main extends Application implements StateMachine {
 
         subSceneEU = new SubScene(cpuRoot, WINDOW_WIDTH - WINDOW_WIDTH_UTILS, WINDOW_HEIGHT - WINDOW_TEXT_AREA_HEIGHT - 3 * WINDOW_HEIGHT_BUTTON);
         subSceneEU.setTranslateY(WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
-        //subScene.setFill(Color.LIGHTGRAY);
 
         root.getChildren().addAll(controlBarRoot, subSceneEU, graphLabel);
         scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
-        //scene.setFill(new ImagePattern(new Image("resources/hexagon-prisms.jpg")));
-//        scene.setFill(new ImagePattern(new Image("resources/coolCubes.jpg")));
-        //scene.setFill(new ImagePattern(new Image("resources/stars.jpg")));
 
         primaryStage.setTitle("List Scheduling");
         primaryStage.setScene(scene);
@@ -168,10 +165,13 @@ public class Main extends Application implements StateMachine {
                 graphLabel.toFront();
                 break;
             case LOAD_GRAPH:
-                showGraph();
-                execUnitRoot.removeList();
-                graphLabel.setText("Graph Representation - Generate Graph");
-                graphLabel.toFront();
+                if (showGraph() == 0) {
+                    execUnitRoot.removeList();
+                    graphLabel.setText("Graph Representation - Generate Graph");
+                    graphLabel.toFront();
+                } else {
+                    currentState = state.START;
+                }
                 break;
             case INSPECT_GRAPH:
                 nodes.forEach(n -> {
@@ -245,7 +245,7 @@ public class Main extends Application implements StateMachine {
     /**
      * This method is used for drawing graph on scene.
      */
-    private void showGraph() {
+    private int showGraph() {
         if (graph != null) {
             Arrays.stream((NodeGraph[]) nodes.toArray(new NodeGraph[0])).forEach(e -> Graphs.removeNode(nodes, edges, e));
             nodes.clear();
@@ -258,19 +258,29 @@ public class Main extends Application implements StateMachine {
         graphRoot.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         graphRoot.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         graphRoot.setPannable(true);
-        //graphRoot.setMinViewportHeight(WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
-        //graphRoot.setMinViewportWidth(WINDOW_WIDTH - WINDOW_WIDTH_UTILS);
-        //graphRoot.setMaxSize(WINDOW_WIDTH - WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
-        //graphRoot.setMinSize(WINDOW_WIDTH - WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
+        graphRoot.setCenterShape(true);
+        graphRoot.setFitToWidth(true);
         subSceneGraph = new SubScene(graphRoot, WINDOW_WIDTH - WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT + 3 * WINDOW_HEIGHT_BUTTON);
+
+        try {
+            Files.write(Paths.get(textPath.getText()), textFromFile.getText().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException ex) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Something went wrong");
+            alert.setHeaderText("Exception occured during saving input file");
+            alert.setContentText(ex.getLocalizedMessage());
+            alert.showAndWait();
+            initApplication(false);
+            return -1;
+        }
 
         nodes = Graphs.makeGraphLogic(textPath.getText());
         edges = Graphs.drawGraph(nodes, graph);
 
-        graph.setTranslateX(WINDOW_WIDTH / 40);
-        //graph.setTranslateY(WINDOW_HEIGHT / 20);
+        graph.setTranslateX(WINDOW_WIDTH / 10);
         graph.setTranslateY(0);
         root.getChildren().add(subSceneGraph);
+        return 0;
     }
 
     /**
@@ -284,10 +294,10 @@ public class Main extends Application implements StateMachine {
         textFromFile = new TextArea();
         textFromFile.setWrapText(true);
         textFromFile.setEditable(true);
-        textFromFile.setText("Press load button and import program file.\n\n" +
-                "Instruction format:\n OPi duration RES=XopY\n\n" +
-                "Example: OP1 1 A=B+C\n\n" +
-                "Hint: Currently all types of operations(+,-,/,*) have same duration (1 cycle)");
+        textFromFile.setText("Press load button and import program file.\n\n"
+                + "Instruction format:\n OPi duration RES=XopY\n\n"
+                + "Example: OP1 1 A=B+C\n\n"
+                + "Hint: Currently all types of operations(+,-,/,*) have same duration (1 cycle)");
         textFromFile.setOpacity(0.5);
 
         textFromFile.setMaxSize(WINDOW_WIDTH_UTILS, WINDOW_TEXT_AREA_HEIGHT);

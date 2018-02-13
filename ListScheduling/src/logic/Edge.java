@@ -8,6 +8,7 @@ package logic;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.QuadCurve;
 import javafx.scene.shape.StrokeLineJoin;
 
 /**
@@ -76,7 +77,7 @@ public class Edge extends Group {
     /**
      * Drawn line on scene that represents this edge in graph.
      */
-    private Line line;
+    private QuadCurve line;
 
     /**
      * The constructor for the Link class.
@@ -164,9 +165,11 @@ public class Edge extends Group {
     public void drawLine() {
         if (line == null) {
             this.line = createLine(nodeFrom, nodeTo);
+            this.line.setSmooth(true);
             line.setStroke(getLineColor(linkType));
+            line.setFill(Color.TRANSPARENT);
             line.setStrokeWidth(STROKE_WIDTH);
-            line.setStrokeLineJoin(StrokeLineJoin.MITER);
+            //line.setStrokeLineJoin(StrokeLineJoin.MITER);
             this.getChildren().add(line);
             this.setVisible(true);
         }
@@ -201,29 +204,33 @@ public class Edge extends Group {
      * @param nodeFrom {@link NodeGraph} Node from which line is drawn.
      * @param nodeTo {@link NodeGraph} Node to is line directed.
      * 
-     * @return {@link Line} Created line as 2D object.
+     * @return {@link QuadCurve} Created quadratic bezier curve as 2D object.
      */
-    private Line createLine(NodeGraph nodeFrom, NodeGraph nodeTo) {
+    private QuadCurve createLine(NodeGraph nodeFrom, NodeGraph nodeTo) {
         double xFrom = nodeFrom.getTranslateX();
         double yFrom = nodeFrom.getTranslateY();
         double xTo = nodeTo.getTranslateX();
         double yTo = nodeTo.getTranslateY();
-
+        double curve = 10;
+        
         if (xFrom == xTo) {
             yFrom += NodeGraph.NODE_RADIUS;
             yTo -= NodeGraph.NODE_RADIUS;
+            curve = (yTo - yFrom) <= NodeGraph.NODE_RADIUS * 3 ? 0 : (yTo - yFrom)/2 ;
         } else if (xFrom < xTo) {
+            curve = +30;
             yFrom += yFrom == yTo ? 0 : NodeGraph.NODE_RADIUS * Math.cos(45);
             xFrom += NodeGraph.NODE_RADIUS * (yFrom == yTo ? 1 : Math.sin(45));
             yTo -= yFrom == yTo ? 0 : NodeGraph.NODE_RADIUS * Math.cos(45);
             xTo -= NodeGraph.NODE_RADIUS * (yFrom == yTo ? 1 : Math.sin(45));
         } else {
+            curve = -30;
             yFrom += yFrom == yTo ? 0 : NodeGraph.NODE_RADIUS * Math.cos(45);
             xFrom -= NodeGraph.NODE_RADIUS * (yFrom == yTo ? 1 : Math.sin(45));
             yTo -= yFrom == yTo ? 0 : NodeGraph.NODE_RADIUS * Math.cos(45);
             xTo += NodeGraph.NODE_RADIUS * (yFrom == yTo ? 1 : Math.sin(45));
         }
-        return new Line(xFrom, yFrom, xTo, yTo);
+        return new QuadCurve(xFrom, yFrom, (xTo+xFrom)/2 + curve, (yTo+yFrom)/2 + curve, xTo, yTo);
     }
 
     /**

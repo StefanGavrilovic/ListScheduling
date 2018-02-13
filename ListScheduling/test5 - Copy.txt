@@ -5,3 +5,4 @@ OP4 1 G=M*M
 OP5 1 A=E/F
 OP6 1 F=5+G
 OP7 1 D=G*H
+OP8 1 G=D*H

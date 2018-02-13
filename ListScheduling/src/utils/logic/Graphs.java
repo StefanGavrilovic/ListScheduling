@@ -19,7 +19,9 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.scene.Group;
+import javafx.util.Pair;
 import logic.Edge;
 import logic.NodeGraph;
 
@@ -170,22 +172,36 @@ public class Graphs {
         List<Edge> links = new LinkedList<>();
 
         int level = 0;
-        int spread = 0;
-        int counter = 0;
-        int mod = 0;
+        int spread = 1;
 
         ListIterator<NodeGraph> nodesIterator = nodes.listIterator();
-        while (nodesIterator.hasNext()) {
-            NodeGraph node = nodesIterator.next();
+
+        HashMap<String, Integer> drawnNodes = new HashMap<>();
+        NodeGraph node;
+        while (true) {
+            if (!nodesIterator.hasNext()) {
+                break;
+            }
+
+            node = nodesIterator.next();
+
+            if (!node.isEmptyPredLinksList()) {
+                ListIterator<Edge> li = node.getPredLinksIterator();
+                while (li.hasNext()) {
+                    if (drawnNodes.get(li.next().getNodeFrom().getName()) == level) {
+                        level++;
+                        spread = ((level % 2) == 0) ? 1 : 2;
+                        break;
+                    }
+                }
+            }
+
             node.setVisible(true);
             node.setTranslateY(level * NodeGraph.NODE_RADIUS * 3);
-            if ((counter % 2) == 0) {
-                node.setTranslateX(spread * NodeGraph.NODE_RADIUS * 2
-                        + (spread == 0 ? NodeGraph.NODE_RADIUS : NodeGraph.NODE_RADIUS * 2));
-            } else {
-                node.setTranslateX(-spread * NodeGraph.NODE_RADIUS * 2
-                        - NodeGraph.NODE_RADIUS * 2);
-            }
+            node.setTranslateX(spread * NodeGraph.NODE_RADIUS * 4
+                    + (spread == 0 ? NodeGraph.NODE_RADIUS : NodeGraph.NODE_RADIUS * 4));
+
+            spread += 2;
 
             ListIterator<Edge> linksIterator = node.getPredLinksIterator();
             while (linksIterator.hasNext()) {
@@ -195,22 +211,11 @@ public class Graphs {
                 root.getChildren().add(link);
             }
 
-            if ((mod == 0) || ((mod != 0) && ((counter % mod) == 0))) {
-                level++;
-                spread = 1;
-                if (mod == 0) {
-                    mod += 2;
-                } else {
-                    mod *= 2;
-                }
-            } else {
-                spread++;
-            }
-            counter++;
-
+            drawnNodes.put(node.getName(), level);
             root.getChildren().add(node);
         }
 
+        drawnNodes.clear();
         return links;
     }
 
@@ -265,7 +270,7 @@ public class Graphs {
             e.getNodeFrom().removeSuccLink(e);
             e.getNodeTo().removePredLink(e);
             final String renameRes = e.getNodeTo().getInstruction().getResult();
-            
+
             if (renameRes.matches("[a-zA-z]+")) {
                 e.getNodeTo().getSuccLinksAsStream().filter(edge -> edge.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)
                         || edge.getNodeTo().getInstruction().getB().equalsIgnoreCase(renameRes)).forEach(edgeRename -> {
