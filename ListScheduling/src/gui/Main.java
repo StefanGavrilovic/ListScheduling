@@ -182,6 +182,7 @@ public class Main extends Application implements StateMachine {
                 //Graphs.checkForNewDeadCode(nodes, edges);
                 Graphs.removeTransientLinks(edges);
                 Graphs.removeOutgoingDependencyLinks(edges);
+                Graphs.removeAntiDependencyLinks(edges);
                 execUnitRoot.makeList(nodes.size());
                 graphLabel.setText("Graph Representation - Inspect Graph");
                 break;

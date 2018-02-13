@@ -14,6 +14,7 @@ public class Instruction {
     private String result;
     private String A;
     private String B;
+    private String op;
 
     Instruction(String instruction) {
         String[] tmp1 = instruction.split("=");
@@ -21,6 +22,7 @@ public class Instruction {
         String[] tmp2 = tmp1[1].split("[+|/|*|-]");
         A = tmp2[0];
         B = tmp2[1];
+        op = tmp1[1].substring(A.length(), A.length() + 1);
     }
 
     public String getResult() {
@@ -46,10 +48,18 @@ public class Instruction {
     public void setB(String B) {
         this.B = B;
     }
+
+    public String getOp() {
+        return op;
+    }
+
+    public void setOp(String op) {
+        this.op = op;
+    }
     
     @Override
     public String toString() {
-        return String.join(" ", result + "=", A, B);
+        return String.join(" ", result + "=", A, op, B);
     }
 
 }

@@ -53,6 +53,7 @@ public class Graphs {
     public static List<NodeGraph> makeGraphLogic(String fileName) {
         List<NodeGraph> nodes = new ArrayList<>();
         HashMap<String, NodeGraph> hashMap = new HashMap<>(HASH_CAP);
+        HashMap<String, NodeGraph> hashMapWR = new HashMap<>(HASH_CAP);
 
         BufferedReader inputFile = null;
         try {
@@ -124,11 +125,21 @@ public class Graphs {
                     }
                 }
                 //WR
+                if (hashMapWR.containsKey(node.getInstruction().getResult())) {
+                    NodeGraph n = hashMapWR.get(node.getInstruction().getResult());
+                    //do not need to check if it is succ, because it can not be
+                    //between instruction that writes to the same location (dead code)
+                    n.addSuccLink(n, node, Edge.ANTI_DEPENDENCY);
+                    node.addPredLink(n, node, Edge.ANTI_DEPENDENCY);
+                }
 
                 hashMap.put(node.getInstruction().getResult(), node);
+                hashMapWR.put(node.getInstruction().getA(), node);
+                hashMapWR.put(node.getInstruction().getB(), node);
             }
 
             hashMap.clear();
+            hashMapWR.clear();
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Graphs.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -226,17 +237,48 @@ public class Graphs {
             e.getNodeFrom().removeSuccLink(e);
             e.getNodeTo().removePredLink(e);
             final String renameRes = e.getNodeTo().getInstruction().getResult();
-            e.getNodeTo().getSuccLinksAsStream().filter(edge -> edge.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes) ||
-                    edge.getNodeTo().getInstruction().getB().equalsIgnoreCase(renameRes)).forEach(edgeRename -> {
-                        if (edgeRename.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)){
-                            edgeRename.getNodeTo().getInstruction().setA(renameRes + 1);
-                        } else {
-                            edgeRename.getNodeTo().getInstruction().setB(renameRes + 1);
-                        }
-                    });
+            e.getNodeTo().getSuccLinksAsStream().filter(edge -> edge.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)
+                    || edge.getNodeTo().getInstruction().getB().equalsIgnoreCase(renameRes)).forEach(edgeRename -> {
+                if (edgeRename.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)) {
+                    edgeRename.getNodeTo().getInstruction().setA(renameRes + 1);
+                } else {
+                    edgeRename.getNodeTo().getInstruction().setB(renameRes + 1);
+                }
+            });
             e.getNodeTo().getInstruction().setResult(renameRes + 1);
         });
-        edges.removeAll(edges.stream().filter(e -> e.compareLinkType(Edge.TRANSIENT)).collect(Collectors.toList()));
+        edges.removeAll(edges.stream().filter(e -> e.compareLinkType(Edge.OUTGOING_DEPENDENCY)).collect(Collectors.toList()));
+    }
+
+    /**
+     * This method is used to delete anti dependency edges from the graph.
+     *
+     * <p>
+     * Be careful! This method is called after removeOutgoingDependencyLinks, so
+     * this method should first check if nodeTo is already renamed.
+     * </p>
+     *
+     * @param edges {@link List<Edge>} List of the graph edges.
+     */
+    public static void removeAntiDependencyLinks(List<Edge> edges) {
+        edges.stream().filter(e -> e.compareLinkType(Edge.ANTI_DEPENDENCY)).forEach(e -> {
+            e.getNodeFrom().removeSuccLink(e);
+            e.getNodeTo().removePredLink(e);
+            final String renameRes = e.getNodeTo().getInstruction().getResult();
+            
+            if (renameRes.matches("[a-zA-z]+")) {
+                e.getNodeTo().getSuccLinksAsStream().filter(edge -> edge.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)
+                        || edge.getNodeTo().getInstruction().getB().equalsIgnoreCase(renameRes)).forEach(edgeRename -> {
+                    if (edgeRename.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)) {
+                        edgeRename.getNodeTo().getInstruction().setA(renameRes + 1);
+                    } else {
+                        edgeRename.getNodeTo().getInstruction().setB(renameRes + 1);
+                    }
+                });
+                e.getNodeTo().getInstruction().setResult(renameRes + 1);
+            }
+        });
+        edges.removeAll(edges.stream().filter(e -> e.compareLinkType(Edge.ANTI_DEPENDENCY)).collect(Collectors.toList()));
     }
 
     /**
