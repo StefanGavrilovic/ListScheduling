@@ -12,6 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
@@ -335,6 +337,14 @@ public class NodeGraph extends Group{
 
     public void setTooltip(Tooltip tooltip) {
         this.tooltip = tooltip;
+    }
+    
+    public void removeAllSuccEdges(int type){
+        this.succLinks.removeAll(this.succLinks.stream().filter(l -> l.compareLinkType(type)).peek(l1 -> l1.hideEdge()).collect(Collectors.toList()));
+    }
+    
+    public void removeAllPredEdges(int type){
+        this.predLinks.removeAll(this.predLinks.stream().filter(l -> l.compareLinkType(type)).peek(l1 -> l1.hideEdge()).collect(Collectors.toList()));
     }
     
 }

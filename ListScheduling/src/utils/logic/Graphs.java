@@ -19,9 +19,7 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javafx.scene.Group;
-import javafx.util.Pair;
 import logic.Edge;
 import logic.NodeGraph;
 
@@ -223,24 +221,22 @@ public class Graphs {
      * This method is used to delete transient edges from the graph.
      *
      * @param edges {@link List<Edge>} List of the graph edges.
+     * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      */
-    public static void removeTransientLinks(List<Edge> edges) {
-        edges.stream().filter(e -> e.compareLinkType(Edge.TRANSIENT)).forEach(e -> {
-            e.getNodeFrom().removeSuccLink(e);
-            e.getNodeTo().removePredLink(e);
-        });
+    public static void removeTransientLinks(List<Edge> edges, List<NodeGraph> nodes) {
         edges.removeAll(edges.stream().filter(e -> e.compareLinkType(Edge.TRANSIENT)).collect(Collectors.toList()));
+        nodes.forEach(n -> n.removeAllPredEdges(Edge.TRANSIENT));
+        nodes.forEach(n -> n.removeAllSuccEdges(Edge.TRANSIENT));
     }
 
     /**
      * This method is used to delete outgoing dependency edges from the graph.
      *
      * @param edges {@link List<Edge>} List of the graph edges.
+     * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      */
-    public static void removeOutgoingDependencyLinks(List<Edge> edges) {
-        edges.stream().filter(e -> e.compareLinkType(Edge.OUTGOING_DEPENDENCY)).forEach(e -> {
-            e.getNodeFrom().removeSuccLink(e);
-            e.getNodeTo().removePredLink(e);
+    public static void removeOutgoingDependencyLinks(List<Edge> edges, List<NodeGraph> nodes) {
+        edges.stream().filter(e1 -> e1.compareLinkType(Edge.OUTGOING_DEPENDENCY)).forEach(e -> {
             final String renameRes = e.getNodeTo().getInstruction().getResult();
             e.getNodeTo().getSuccLinksAsStream().filter(edge -> edge.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)
                     || edge.getNodeTo().getInstruction().getB().equalsIgnoreCase(renameRes)).forEach(edgeRename -> {
@@ -253,6 +249,8 @@ public class Graphs {
             e.getNodeTo().getInstruction().setResult(renameRes + 1);
         });
         edges.removeAll(edges.stream().filter(e -> e.compareLinkType(Edge.OUTGOING_DEPENDENCY)).collect(Collectors.toList()));
+        nodes.forEach(n -> n.removeAllPredEdges(Edge.OUTGOING_DEPENDENCY));
+        nodes.forEach(n -> n.removeAllSuccEdges(Edge.OUTGOING_DEPENDENCY));
     }
 
     /**
@@ -264,26 +262,27 @@ public class Graphs {
      * </p>
      *
      * @param edges {@link List<Edge>} List of the graph edges.
+     * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      */
-    public static void removeAntiDependencyLinks(List<Edge> edges) {
-        edges.stream().filter(e -> e.compareLinkType(Edge.ANTI_DEPENDENCY)).forEach(e -> {
-            e.getNodeFrom().removeSuccLink(e);
-            e.getNodeTo().removePredLink(e);
+    public static void removeAntiDependencyLinks(List<Edge> edges, List<NodeGraph> nodes) {
+        edges.stream().filter(e1 -> e1.compareLinkType(Edge.ANTI_DEPENDENCY)).forEach(e -> {
             final String renameRes = e.getNodeTo().getInstruction().getResult();
 
+            e.getNodeTo().getSuccLinksAsStream().filter(edge -> renameRes.startsWith(edge.getNodeTo().getInstruction().getA())
+                    || renameRes.startsWith(edge.getNodeTo().getInstruction().getB())).forEach(edgeRename -> {
+                if (renameRes.startsWith(edgeRename.getNodeTo().getInstruction().getA())) {
+                    edgeRename.getNodeTo().getInstruction().setA(renameRes + 1);
+                } else {
+                    edgeRename.getNodeTo().getInstruction().setB(renameRes + 1);
+                }
+            });
             if (renameRes.matches("[a-zA-z]+")) {
-                e.getNodeTo().getSuccLinksAsStream().filter(edge -> edge.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)
-                        || edge.getNodeTo().getInstruction().getB().equalsIgnoreCase(renameRes)).forEach(edgeRename -> {
-                    if (edgeRename.getNodeTo().getInstruction().getA().equalsIgnoreCase(renameRes)) {
-                        edgeRename.getNodeTo().getInstruction().setA(renameRes + 1);
-                    } else {
-                        edgeRename.getNodeTo().getInstruction().setB(renameRes + 1);
-                    }
-                });
                 e.getNodeTo().getInstruction().setResult(renameRes + 1);
             }
         });
         edges.removeAll(edges.stream().filter(e -> e.compareLinkType(Edge.ANTI_DEPENDENCY)).collect(Collectors.toList()));
+        nodes.forEach(n -> n.removeAllPredEdges(Edge.ANTI_DEPENDENCY));
+        nodes.forEach(n -> n.removeAllSuccEdges(Edge.ANTI_DEPENDENCY));
     }
 
     /**
@@ -346,37 +345,75 @@ public class Graphs {
      */
     public static void criticalPath(List<NodeGraph> nodes) {
         if (nodes.stream().noneMatch(e -> e.OnCriticalPath())) {
-            int[] est = new int[nodes.size()];
-            int[] lst = new int[nodes.size()];
+            //take instructions without successors
+            List<NodeGraph> nodesWithoutSuccessors = nodes.stream().filter(n -> n.isEmptySuccLinksList()).collect(Collectors.toList());
+            int length = 0;
+            int maxLength = 0;
 
-            NodeGraph[] arrayNodes = (NodeGraph[]) nodes.toArray(new NodeGraph[0]);
+            ArrayList<NodeGraph> stack = new ArrayList<>();
+            ArrayList<NodeGraph> nodesOnCritical = new ArrayList<>();
+            HashMap<String, NodeGraph> tempNodes = new HashMap<>();
+
+            for (NodeGraph nodesWithoutSuccessor : nodesWithoutSuccessors) {
+                stack.addAll(nodesWithoutSuccessor.getPredLinksAsStream().map(link -> link.getNodeFrom()).collect(Collectors.toList()));
+                tempNodes.clear();
+
+                while (!stack.isEmpty()) {
+                    List<NodeGraph> tmp = stack.stream().collect(Collectors.toList());
+                    stack.clear();
+                    tmp.forEach(node -> {
+                        stack.addAll(node.getPredLinksAsStream().map(link -> link.getNodeFrom()).collect(Collectors.toList()));
+                        tempNodes.put(node.getName(), node);
+                            });
+                    length++;
+                }
+
+                if (maxLength < length) {
+                    maxLength = length;
+                    nodesOnCritical.clear();
+                    nodesOnCritical.add(nodesWithoutSuccessor);
+                    nodesOnCritical.addAll(tempNodes.values().stream().collect(Collectors.toList()));
+                }
+                
+                length = 0;
+                tempNodes.clear();
+            }
+
+            nodesOnCritical.sort((n1, n2) -> n1.getOrdNumber() - n2.getOrdNumber());
+
+            int[] est = new int[nodesOnCritical.size()];
+            int[] lst = new int[nodesOnCritical.size()];
+
+            NodeGraph[] arrayNodes = (NodeGraph[]) nodesOnCritical.toArray(new NodeGraph[0]);
             est[0] = 0;
 
-            for (int i = 1; i < nodes.size(); i++) {
+            for (int i = 1; i < nodesOnCritical.size(); i++) {
                 int max = 0;
                 ListIterator iteratorPrev = (arrayNodes[i]).getPredLinksIterator();
                 while (iteratorPrev.hasNext()) {
                     NodeGraph prevNode = ((Edge) iteratorPrev.next()).getNodeFrom();
-                    int index = nodes.indexOf(prevNode);
-                    max = max > (prevNode.getDuration() + est[index]) ? max : (prevNode.getDuration() + est[index]);
+                    int index = nodesOnCritical.indexOf(prevNode);
+                    if (index != -1)
+                        max = max > (prevNode.getDuration() + est[index]) ? max : (prevNode.getDuration() + est[index]);
                 }
                 est[i] = max;
             }
 
-            lst[nodes.size() - 1] = est[nodes.size() - 1];// + (arrayNodes[nodes.size() - 1]).getDuration();//provjeriti!
+            lst[nodesOnCritical.size() - 1] = est[nodesOnCritical.size() - 1];// + (arrayNodes[nodes.size() - 1]).getDuration();//provjeriti!
 
-            for (int i = nodes.size() - 2; i > 0; i--) {
+            for (int i = nodesOnCritical.size() - 2; i > 0; i--) {
                 int min = Integer.MAX_VALUE;
                 ListIterator iteratorSucc = (arrayNodes[i]).getSuccLinksIterator();
                 while (iteratorSucc.hasNext()) {
                     NodeGraph succNode = ((Edge) iteratorSucc.next()).getNodeTo();
-                    int index = nodes.indexOf(succNode);
-                    min = min < (lst[index] - (arrayNodes[i]).getDuration()) ? min : (lst[index] - (arrayNodes[i]).getDuration());
+                    int index = nodesOnCritical.indexOf(succNode);
+                    if (index != -1)
+                        min = min < (lst[index] - (arrayNodes[i]).getDuration()) ? min : (lst[index] - (arrayNodes[i]).getDuration());
                 }
                 lst[i] = min;
             }
 
-            for (int i = 0; i < nodes.size(); i++) {
+            for (int i = 0; i < nodesOnCritical.size(); i++) {
                 (arrayNodes[i]).setDelayCriticalPath(lst[i] - est[i]);
             }
 

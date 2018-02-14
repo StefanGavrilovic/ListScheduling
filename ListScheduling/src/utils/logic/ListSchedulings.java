@@ -67,9 +67,12 @@ public class ListSchedulings {
      * @param nodes {@link List<NodeGraph>} List of the graph nodes.
      * @param edges {@link List<NodeGraph>} List of the graph edges.
      * @param eu {@link ExecutionUnit} Execution unit that acts as CPU for
-     * instructions.
+     *      instructions.
+     * @param sb {@link StringBuffer} Buffer for optimized program.
+     * @param cycle {@link Integer} Cycle count.
+     * 
      */
-    public static void executeInstruction(List<NodeGraph> nodes, List<Edge> edges, ExecutionUnit eu) {
+    public static void executeInstruction(List<NodeGraph> nodes, List<Edge> edges, ExecutionUnit eu, StringBuffer sb, int cycle) {
         List<Group> nodesToExe = new ArrayList<>();
         IntStream.range(0, eu.getNumOfCores()).forEach(i -> {
             final NodeGraph tmp = getNodeToExecute(getDataReady(nodes));
@@ -79,9 +82,17 @@ public class ListSchedulings {
                 t.changeBodyColor(EXECUTED);
             });
         });
-        nodesToExe.forEach(t -> Graphs.removeNode(nodes, edges, (NodeGraph)t));
+        if (nodesToExe.size() > 0) 
+            sb.append("Cycle " + cycle + ": ");
+        
+        nodesToExe.forEach(t -> {
+            Graphs.removeNode(nodes, edges, (NodeGraph)t);
+            sb.append(((NodeGraph)t).getInstruction().toString());
+            sb.append("; ");
+                });
         if (nodesToExe.size() > 0) {
             //move
+            sb.append("\n");
             eu.addFinishedToList(eu.changeEUBody(nodesToExe));
         } else {
             Main.setAlgorithmFinished();

@@ -12,7 +12,6 @@ import java.util.stream.IntStream;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 import logic.NodeGraph;
 import utils.gui.Element;
@@ -64,7 +63,7 @@ public class ExecutionUnit extends Group {
      * @param numberOfNodes {@link Integer} Number of nodes loaded into CPU.
      */
     public void makeList(int numberOfNodes) {
-        cores.forEach(core -> core.makeList((numberOfNodes + cores.size() - 1) / cores.size()));
+        cores.forEach(core -> core.makeList(numberOfNodes));
     }
 
     /**
@@ -108,10 +107,12 @@ public class ExecutionUnit extends Group {
         return cores.size();
     }
 
-    public void reRender(final int numOfCores) {
+    public void reRender(int numOfCores) {
         this.getChildren().clear();
         Optional.ofNullable(this.cores).ifPresent(c -> c.clear());
         processingUnit = null;
+        
+        if (numOfCores == 0) numOfCores = 1;
         
         this.cores = new LinkedList<>();
         processingUnit = makeExecutionUnit(numOfCores);

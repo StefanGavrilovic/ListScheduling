@@ -103,6 +103,8 @@ public class Main extends Application implements StateMachine {
     private boolean startedTimer = false;
     private StateMachine.state currentState;
     private boolean fileLoaded = false;
+    public static StringBuffer resultProgram = new StringBuffer();
+    public static int cycle = 0;
 
     /**
      * @param args the command line arguments
@@ -116,8 +118,9 @@ public class Main extends Application implements StateMachine {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Execution Finished");
         a.setHeaderText("Simulation has finished");
-        a.setContentText("Please reload current program or load another program and start algorithm.");
+        a.setContentText("Please reload current program or load another program and start algorithm.\n\n Result program: \n\n" + resultProgram.toString());
         a.showAndWait();
+        resultProgram.delete(0, resultProgram.length());
     }
 
     @Override
@@ -180,10 +183,9 @@ public class Main extends Application implements StateMachine {
                 });
                 Graphs.removeDeadCode(nodes, edges);
                 //Graphs.checkForNewDeadCode(nodes, edges);
-                Graphs.removeTransientLinks(edges);
-                Graphs.removeOutgoingDependencyLinks(edges);
-                Graphs.removeAntiDependencyLinks(edges);
-                execUnitRoot.makeList(nodes.size());
+                Graphs.removeTransientLinks(edges, nodes);
+                Graphs.removeOutgoingDependencyLinks(edges, nodes);
+                Graphs.removeAntiDependencyLinks(edges, nodes);
                 graphLabel.setText("Graph Representation - Inspect Graph");
                 break;
             case CRITICAL_PATH:
@@ -193,14 +195,19 @@ public class Main extends Application implements StateMachine {
                     n.changeBodyColor(ListSchedulings.PREPARE);
                 });
                 Graphs.criticalPath(nodes);
+                final int onPath = (int) nodes.stream().filter(n -> n.OnCriticalPath()).count();
+                execUnitRoot.reRender((nodes.size() + onPath - 1) / onPath);
+                execUnitRoot.makeList(nodes.size());
                 graphLabel.setText("Graph Representation - Determine Critical Path");
                 break;
             case RUN_ALGORITHM:
                 Graphs.determineHeuristicWeights(nodes);
                 graphLabel.setText("Graph Representation - Determine Weights");
+                cycle = 0;
                 break;
             case EXECUTE:
-                ListSchedulings.executeInstruction(nodes, edges, execUnitRoot);
+                cycle++;
+                ListSchedulings.executeInstruction(nodes, edges, execUnitRoot, resultProgram, cycle);
                 graphLabel.setText("Graph Representation - Execute");
                 break;
         }
@@ -314,11 +321,13 @@ public class Main extends Application implements StateMachine {
 
         //control core
         setCores = new ComboBox(FXCollections.observableArrayList(
+                "0 Infinity",
                 "1 Core",
                 "2 Cores",
+                "3 Cores",
                 "4 Cores"
         ));
-        setCores.setValue("1 Core");
+        setCores.setValue("0 Infinity");
         setCores.setOnAction(event -> {
             Optional.ofNullable(execUnitRoot)
                     .ifPresent(s -> Optional.ofNullable(setCores.getValue())
