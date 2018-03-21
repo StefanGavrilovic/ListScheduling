@@ -6,16 +6,35 @@
 package logic;
 
 /**
- *
+ * The Instruction class represents simplified instructions for the purposes of
+ * list scheduling algorithm.
+ * 
  * @author Stefan
  */
 public class Instruction {
 
+    /**
+     * Instruction's result.
+     */
     private String result;
+    /**
+     * Instruction's operand.
+     */
     private String A;
+    /**
+     * Instruction's operand.
+     */
     private String B;
+    /**
+     * Instruction's operation.
+     */
     private String op;
 
+    /**
+     * The Constructor.
+     * 
+     * @param instruction {@link String} Represents instruction.
+     */
     Instruction(String instruction) {
         String[] tmp1 = instruction.split("=");
         result = tmp1[0];

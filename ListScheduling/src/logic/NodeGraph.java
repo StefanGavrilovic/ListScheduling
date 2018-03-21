@@ -12,7 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javafx.scene.Group;
@@ -25,13 +24,13 @@ import javafx.scene.text.Text;
  *
  * @author Stefan
  */
-public class NodeGraph extends Group{
+public class NodeGraph extends Group {
 
     public static final int NODE_RADIUS = 40;
     public static final int TEXT_WIDTH = 8;
     public static final int TEXT_HEIGHT = 10;
     public static final int TEXT_SIZE = 4;
-    
+
     /**
      * Name of the operation that this node represent.
      */
@@ -92,19 +91,17 @@ public class NodeGraph extends Group{
      * Node's tooltip.
      */
     private Tooltip tooltip;
-    
+
     /**
      * The constructor of Node in Graph.
-     * @param name
-     *          {@link String} name of the operation.
-     * @param duration
-     *          {@link String} number of cycles.
-     * @param instruction
-     *          {@link String} instruction to be executed.
+     *
+     * @param name {@link String} name of the operation.
+     * @param duration {@link String} number of cycles.
+     * @param instruction {@link String} instruction to be executed.
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public NodeGraph(String name, String duration, String instruction) {
-        this.name = name; 
+        this.name = name;
         this.ordNumber = Integer.parseInt(name.substring(2));
         this.duration = Integer.parseInt(duration);
         this.instruction = new Instruction(instruction);
@@ -115,17 +112,17 @@ public class NodeGraph extends Group{
         this.deadResult = false;
         this.finished = false;
         this.chosen = false;
-        
+
         body = new Circle(NODE_RADIUS);
         body.setFill(ListSchedulings.PREPARE);
         body.setStroke(Color.BLACK);
-        
+
         final NumberFormat formatter = new DecimalFormat("#0.000");
         text = new Text(-(TEXT_WIDTH) - TEXT_SIZE, TEXT_HEIGHT / 2, this.name);
         textW = new Text(-(TEXT_WIDTH) - TEXT_SIZE * 2.5, TEXT_HEIGHT * 2, formatter.format(this.weightNode));
 
         tooltip = new Tooltip();
-        
+
         this.setOnMouseEntered(event -> {
             this.getTooltip().setText(this.getInstruction().toString());
             Tooltip.install(body, tooltip);
@@ -133,7 +130,7 @@ public class NodeGraph extends Group{
         this.setOnMouseExited(event -> {
             Tooltip.uninstall(body, tooltip);
         });
-        
+
         this.getChildren().addAll(body, text, textW);
         this.setVisible(false);
     }
@@ -149,11 +146,11 @@ public class NodeGraph extends Group{
     public int getOrdNumber() {
         return ordNumber;
     }
-    
-    public void setOrdNumber (int ordNumber){
+
+    public void setOrdNumber(int ordNumber) {
         this.ordNumber = ordNumber;
     }
-    
+
     public int getDuration() {
         return duration;
     }
@@ -169,21 +166,21 @@ public class NodeGraph extends Group{
     public void setInstruction(String instruction) {
         this.instruction = new Instruction(instruction);
     }
-    
+
     public void setDelayCriticalPath(int delay) {
         this.delayCriticalPath = delay;
     }
-    
+
     public boolean OnCriticalPath() {
         return this.delayCriticalPath == 0;
     }
-    
+
     public void setNodeWeight(double weight) {
         this.weightNode = weight;
         final NumberFormat formatter = new DecimalFormat("#0.000");
         this.textW.setText(formatter.format(weight));
     }
-    
+
     public double getNodeWeight() {
         return this.weightNode;
     }
@@ -200,15 +197,15 @@ public class NodeGraph extends Group{
     public boolean isFinished() {
         return finished;
     }
-    
+
     public void setFinished(boolean finished) {
         this.finished = finished;
     }
-    
+
     public void addPredLink(NodeGraph nodeFrom, NodeGraph nodeTo) {
         predLinks.add(new Edge(nodeFrom, nodeTo, Edge.TYPE_UNDETERMINED));
     }
-    
+
     public void addPredLink(NodeGraph nodeFrom, NodeGraph nodeTo, int linkType) {
         predLinks.add(new Edge(nodeFrom, nodeTo, linkType));
     }
@@ -216,11 +213,11 @@ public class NodeGraph extends Group{
     public boolean isEmptyPredLinksList() {
         return this.predLinks.isEmpty();
     }
-    
+
     public boolean isEmptySuccLinksList() {
         return this.succLinks.isEmpty();
     }
-    
+
     public NodeGraph getFirstPredLink() {
         return predLinks.get(0).getNodeFrom();
     }
@@ -235,19 +232,19 @@ public class NodeGraph extends Group{
         predLinks.remove(link);
         link.hideEdge(); //test
     }
-    
+
     public ListIterator<Edge> getPredLinksIterator() {
         return predLinks.listIterator();
     }
-    
+
     public Stream<Edge> getPredLinksAsStream() {
         return predLinks.stream();
     }
-    
+
     public void addSuccLink(NodeGraph nodeFrom, NodeGraph nodeTo) {
         succLinks.add(new Edge(nodeFrom, nodeTo, Edge.TYPE_UNDETERMINED));
     }
-    
+
     public void addSuccLink(NodeGraph nodeFrom, NodeGraph nodeTo, int linkType) {
         succLinks.add(new Edge(nodeFrom, nodeTo, linkType));
     }
@@ -266,15 +263,15 @@ public class NodeGraph extends Group{
         succLinks.remove(link);
         link.hideEdge(); //test
     }
-    
+
     public ListIterator<Edge> getSuccLinksIterator() {
         return succLinks.listIterator();
     }
-    
+
     public Stream<Edge> getSuccLinksAsStream() {
         return succLinks.stream();
     }
-    
+
     public Edge findSuccLink(NodeGraph linkNode) {
         ListIterator<Edge> iterator = getSuccLinksIterator();
         while (iterator.hasNext()) {
@@ -285,15 +282,15 @@ public class NodeGraph extends Group{
         }
         return null;
     }
-    
+
     public void changeBodyColor(Color color) {
         this.body.setFill(color);
     }
-    
+
     public boolean compareNode(NodeGraph node) {
         return this.getName().contentEquals(node.getName());
     }
-    
+
     public void refreshWeights(double weight) {
         final NumberFormat formatter = new DecimalFormat("#0.000");
         this.textW.setText(formatter.format(weight));
@@ -338,13 +335,13 @@ public class NodeGraph extends Group{
     public void setTooltip(Tooltip tooltip) {
         this.tooltip = tooltip;
     }
-    
-    public void removeAllSuccEdges(int type){
+
+    public void removeAllSuccEdges(int type) {
         this.succLinks.removeAll(this.succLinks.stream().filter(l -> l.compareLinkType(type)).peek(l1 -> l1.hideEdge()).collect(Collectors.toList()));
     }
-    
-    public void removeAllPredEdges(int type){
+
+    public void removeAllPredEdges(int type) {
         this.predLinks.removeAll(this.predLinks.stream().filter(l -> l.compareLinkType(type)).peek(l1 -> l1.hideEdge()).collect(Collectors.toList()));
     }
-    
+
 }

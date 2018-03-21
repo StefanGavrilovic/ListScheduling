@@ -19,7 +19,8 @@ import logic.NodeGraph;
 import utils.gui.Element;
 
 /**
- *
+ * The ExecutionCore class is GUI representation of a CPU or execution core.
+ * 
  * @author zer0
  */
 public class ExecutionCore extends Group {

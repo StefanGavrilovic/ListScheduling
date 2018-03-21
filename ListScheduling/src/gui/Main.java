@@ -42,7 +42,8 @@ import utils.logic.ListSchedulings;
 import logic.StateMachine;
 
 /**
- *
+ * The Main class represents application's object.
+ * 
  * @author Stefan
  */
 public class Main extends Application implements StateMachine {
@@ -113,6 +114,9 @@ public class Main extends Application implements StateMachine {
         launch(args);
     }
 
+    /**
+     * This method is called when algorithm finishes its last step.
+     */
     public static void setAlgorithmFinished() {
         algFinished = true;
         Alert a = new Alert(Alert.AlertType.INFORMATION);
@@ -446,6 +450,15 @@ public class Main extends Application implements StateMachine {
         buttonBar.getChildren().addAll(buttonNext, buttonPrev, buttonLoad, buttonReload);
     }
 
+    /**
+     * This method is used for creating default buttons.
+     * 
+     * @param name {@link String} Name of the button.
+     * @param x {@link double} Value for which button is translated on x-axis.
+     * @param y {@link double} Value for which button is translated on y-axis.
+     * 
+     * @return {@link Button} Returns created button.
+     */
     private Button createButton(String name, double x, double y) {
         Button button = new Button(name);
         button.setMouseTransparent(false);
@@ -456,6 +469,9 @@ public class Main extends Application implements StateMachine {
         return button;
     }
 
+    /**
+     * The MyTimer class represents applications timer.
+     */
     private class MyTimer extends AnimationTimer {
 
         @Override

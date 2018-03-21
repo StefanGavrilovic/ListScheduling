@@ -6,7 +6,8 @@
 package logic;
 
 /**
- *
+ * The StateMachine interface represents algorithm's steps.
+ * 
  * @author Stefan
  */
 public interface StateMachine {

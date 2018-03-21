@@ -18,7 +18,8 @@ import logic.Edge;
 import logic.NodeGraph;
 
 /**
- *
+ * Utility ListSchedulings class used contains methods used by algorithm.
+ * 
  * @author Stefan
  */
 public class ListSchedulings {

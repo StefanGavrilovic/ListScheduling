@@ -7,9 +7,7 @@ package logic;
 
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.QuadCurve;
-import javafx.scene.shape.StrokeLineJoin;
 
 /**
  *
@@ -177,33 +175,33 @@ public class Edge extends Group {
 
     /**
      * This method checks if this edge is between given nodes.
-     * 
+     *
      * @param nodeFrom {@link NodeGraph} Node from searched edge is directed.
      * @param nodeTo {@link NodeGraph} Node to searched edge is directed.
-     * 
-     * @return {@link boolean}  
+     *
+     * @return {@link boolean}
      */
     public boolean checkEdge(NodeGraph nodeFrom, NodeGraph nodeTo) {
         return this.getNodeFrom().equals(nodeFrom) && this.getNodeTo().equals(nodeTo);
     }
-    
+
     /**
      * This method compares given type with edge type.
-     * 
+     *
      * @param linkType {@link int} Given type.
-     * 
+     *
      * @return {@link boolean} Returns if edge type and the given are equal.
      */
     public boolean compareLinkType(int linkType) {
         return this.linkType == linkType;
     }
-    
+
     /**
      * Creates line that represents edge between given nodes.
-     * 
+     *
      * @param nodeFrom {@link NodeGraph} Node from which line is drawn.
      * @param nodeTo {@link NodeGraph} Node to is line directed.
-     * 
+     *
      * @return {@link QuadCurve} Created quadratic bezier curve as 2D object.
      */
     private QuadCurve createLine(NodeGraph nodeFrom, NodeGraph nodeTo) {
@@ -212,11 +210,11 @@ public class Edge extends Group {
         double xTo = nodeTo.getTranslateX();
         double yTo = nodeTo.getTranslateY();
         double curve = 10;
-        
+
         if (xFrom == xTo) {
             yFrom += NodeGraph.NODE_RADIUS;
             yTo -= NodeGraph.NODE_RADIUS;
-            curve = (yTo - yFrom) <= NodeGraph.NODE_RADIUS * 3 ? 0 : (yTo - yFrom)/2 ;
+            curve = (yTo - yFrom) <= NodeGraph.NODE_RADIUS * 3 ? 0 : (yTo - yFrom) / 2;
         } else if (xFrom < xTo) {
             curve = +30;
             yFrom += yFrom == yTo ? 0 : NodeGraph.NODE_RADIUS * Math.cos(45);
@@ -230,14 +228,14 @@ public class Edge extends Group {
             yTo -= yFrom == yTo ? 0 : NodeGraph.NODE_RADIUS * Math.cos(45);
             xTo += NodeGraph.NODE_RADIUS * (yFrom == yTo ? 1 : Math.sin(45));
         }
-        return new QuadCurve(xFrom, yFrom, (xTo+xFrom)/2 + curve, (yTo+yFrom)/2 + curve, xTo, yTo);
+        return new QuadCurve(xFrom, yFrom, (xTo + xFrom) / 2 + curve, (yTo + yFrom) / 2 + curve, xTo, yTo);
     }
 
     /**
      * Getter for the color of the line by its type.
-     * 
+     *
      * @param type {@link int} Type of edge/line.
-     * 
+     *
      * @return {@link Color} Color of the line.
      */
     private Color getLineColor(int type) {
@@ -256,7 +254,7 @@ public class Edge extends Group {
                 return Color.WHITE;
         }
     }
-    
+
     public final static String legendEdge() {
         return String.join("\n\n", "DEPEDENCY - YELLOW",
                 "ANTI DEPENDENCY - RED",
@@ -264,4 +262,5 @@ public class Edge extends Group {
                 "TRANSIENT - LAWNGREEN",
                 "TYPE UNDETERMINED - BLACK");
     }
+
 }
